@@ -4,18 +4,23 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.educhat.ui.theme.EduChatTheme
@@ -34,24 +39,41 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ConversationItem(modifier: Modifier) {
-
-    Card(modifier = modifier) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+fun ConversationItem(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(4.dp)) {
+        Card(
+            shape = RoundedCornerShape(
+                topStart = 24.dp,
+                topEnd = 24.dp,
+                bottomEnd = 24.dp,
+                bottomStart = 2.dp
+            ),
+            modifier = Modifier
+                .padding(start = 44.dp)
         ) {
-            val image = painterResource(R.drawable.educhat_icon)
-
-            Image(
-                painter = image,
+            Row(
                 modifier = Modifier
-                    .height(40.dp)
-                    .padding(4.dp),
-                contentDescription = null
-            )
-            Text("HAAAALLO")
+                    .padding(8.dp)
+                    .wrapContentWidth()
+                    .widthIn(max = 400.dp)
+            ) {
+                Text(
+                    text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eget posuere ex. Nulla ut tempor tortor. Donec sagittis lacus felis, ut faucibus risus mattis eget. Phasellus in ligula suscipit mi eleifend auctor sit amet non orci.",
+                    textAlign = TextAlign.Justify,
+                    modifier = Modifier.wrapContentWidth()
+                )
+            }
         }
+
+        val image = painterResource(R.drawable.educhat_icon)
+
+        Image(
+            painter = image,
+            contentDescription = null,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(MaterialTheme.shapes.extraLarge)
+        )
     }
 }
 
