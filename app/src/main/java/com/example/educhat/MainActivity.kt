@@ -3,26 +3,17 @@ package com.example.educhat
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.educhat.ui.components.ChatItem
+import com.example.educhat.ui.data.Chats
+import com.example.educhat.ui.model.Chat
 import com.example.educhat.ui.theme.EduChatTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,7 +22,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             EduChatTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ConversationItem(modifier = Modifier.padding(innerPadding))
+                    ChatList(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -39,41 +30,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ConversationItem(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(4.dp)) {
-        Card(
-            shape = RoundedCornerShape(
-                topStart = 24.dp,
-                topEnd = 24.dp,
-                bottomEnd = 24.dp,
-                bottomStart = 2.dp
-            ),
-            modifier = Modifier
-                .padding(start = 44.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .wrapContentWidth()
-                    .widthIn(max = 400.dp)
-            ) {
-                Text(
-                    text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eget posuere ex. Nulla ut tempor tortor. Donec sagittis lacus felis, ut faucibus risus mattis eget. Phasellus in ligula suscipit mi eleifend auctor sit amet non orci.",
-                    textAlign = TextAlign.Justify,
-                    modifier = Modifier.wrapContentWidth()
-                )
-            }
+fun ChatList(chatList: List<Chat>, modifier: Modifier = Modifier) {
+    LazyColumn(modifier = modifier) {
+        items(chatList) { chat ->
+            ChatItem(title = chat, modifier = modifier)
         }
-
-        val image = painterResource(R.drawable.educhat_icon)
-
-        Image(
-            painter = image,
-            contentDescription = null,
-            modifier = Modifier
-                .size(40.dp)
-                .clip(MaterialTheme.shapes.extraLarge)
-        )
     }
 }
 
@@ -81,7 +42,7 @@ fun ConversationItem(modifier: Modifier = Modifier) {
 @Composable
 fun EduChatAppPreviewLight() {
     EduChatTheme {
-        ConversationItem(modifier = Modifier.padding(4.dp))
+        ChatList(chatList = Chats().loadChats(), modifier = Modifier.padding(4.dp))
     }
 }
 
@@ -89,6 +50,6 @@ fun EduChatAppPreviewLight() {
 @Composable
 fun EduChatAppPreviewDark() {
     EduChatTheme(darkTheme = true) {
-        ConversationItem(modifier = Modifier.padding(4.dp))
+        ChatList(chatList = Chats().loadChats(), modifier = Modifier.padding(4.dp))
     }
 }
