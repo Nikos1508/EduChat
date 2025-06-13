@@ -3,6 +3,7 @@ package com.example.educhat.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -16,10 +17,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.educhat.R
+import com.example.educhat.ui.model.Chat
 
 @Composable
-fun ChatItem(title: String, message: String, modifier: Modifier = Modifier) {
-    Card(modifier = Modifier) {
+fun ChatItem(chat: Chat, modifier: Modifier = Modifier) {
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .padding(8.dp)) {
         Row(
             modifier = Modifier
                 .padding(8.dp)
@@ -31,7 +35,7 @@ fun ChatItem(title: String, message: String, modifier: Modifier = Modifier) {
                 painter = image,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(50.dp)
                     .clip(MaterialTheme.shapes.extraLarge)
             )
 
@@ -39,7 +43,7 @@ fun ChatItem(title: String, message: String, modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(start = 8.dp),
             ) {
                 Text(
-                    text = title,
+                    text = chat.title,
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier
@@ -47,7 +51,7 @@ fun ChatItem(title: String, message: String, modifier: Modifier = Modifier) {
                         .padding(bottom = 2.dp)
                 )
                 Text(
-                    text = message,
+                    text = chat.message,
                     textAlign = TextAlign.Justify,
                     modifier = Modifier.wrapContentWidth()
                 )
@@ -56,23 +60,3 @@ fun ChatItem(title: String, message: String, modifier: Modifier = Modifier) {
         }
     }
 }
-/*
-
-
-@Preview(showBackground = true)
-@Composable
-fun ChatPreviewLight() {
-    EduChatTheme {
-        ChatItem(modifier = Modifier.padding(4.dp))
-    }
-}
-
-@Preview
-@Composable
-fun ChatPreviewDark() {
-    EduChatTheme(darkTheme = true) {
-        ChatItem(modifier = Modifier.padding(4.dp))
-    }
-}
-
-*/

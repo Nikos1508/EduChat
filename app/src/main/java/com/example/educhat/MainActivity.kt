@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,7 +23,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             EduChatTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ChatList(modifier = Modifier.padding(innerPadding))
+                    ChatApp(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -30,10 +31,21 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+fun ChatApp(modifier: Modifier) {
+    ChatList(
+        chatList = Chats().loadChats(),
+        modifier = modifier
+    )
+}
+
+@Composable
 fun ChatList(chatList: List<Chat>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier) {
         items(chatList) { chat ->
-            ChatItem(title = chat, modifier = modifier)
+            ChatItem(
+                chat = chat,
+                modifier = Modifier.padding(8.dp)
+            )
         }
     }
 }
@@ -42,14 +54,14 @@ fun ChatList(chatList: List<Chat>, modifier: Modifier = Modifier) {
 @Composable
 fun EduChatAppPreviewLight() {
     EduChatTheme {
-        ChatList(chatList = Chats().loadChats(), modifier = Modifier.padding(4.dp))
+        ChatApp(modifier = Modifier.padding(4.dp))
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun EduChatAppPreviewDark() {
-    EduChatTheme(darkTheme = true) {
-        ChatList(chatList = Chats().loadChats(), modifier = Modifier.padding(4.dp))
+    EduChatTheme (darkTheme = true) {
+        ChatApp(modifier = Modifier.padding(4.dp))
     }
 }
