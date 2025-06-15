@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.educhat.ui.components.ChatItem
+import com.example.educhat.ui.components.TopBar
 import com.example.educhat.ui.data.Chats
 import com.example.educhat.ui.model.Chat
 import com.example.educhat.ui.theme.EduChatTheme
@@ -32,10 +33,17 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ChatApp(modifier: Modifier) {
-    ChatList(
-        chatList = Chats().loadChats(),
-        modifier = modifier
-    )
+    Scaffold(
+        topBar = {
+            TopBar(modifier = modifier)
+        },
+    ) { innerPadding ->
+        ChatList(
+            chatList = Chats().loadChats(),
+            modifier = Modifier.padding((innerPadding))
+        )
+    }
+
 }
 
 @Composable
@@ -54,7 +62,7 @@ fun ChatList(chatList: List<Chat>, modifier: Modifier = Modifier) {
 @Composable
 fun EduChatAppPreviewLight() {
     EduChatTheme {
-        ChatApp(modifier = Modifier.padding(4.dp))
+        ChatApp(modifier = Modifier)
     }
 }
 
@@ -62,6 +70,6 @@ fun EduChatAppPreviewLight() {
 @Composable
 fun EduChatAppPreviewDark() {
     EduChatTheme (darkTheme = true) {
-        ChatApp(modifier = Modifier.padding(4.dp))
+        ChatApp(modifier = Modifier)
     }
 }
