@@ -22,7 +22,7 @@ import com.example.educhat.R
 import com.example.educhat.ui.theme.EduChatTheme
 
 @Composable
-fun MessageItem(modifier: Modifier = Modifier) {
+fun MessageItem(modifier: Modifier = Modifier, ) {
     Column(modifier = modifier.padding(4.dp)) {
         Card(
             shape = RoundedCornerShape(
