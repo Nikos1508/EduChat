@@ -17,10 +17,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.educhat.R
-import com.example.educhat.ui.model.Chat
+import com.example.educhat.ui.model.Group
 
 @Composable
-fun ChatItem(chat: Chat, modifier: Modifier = Modifier) {
+fun GroupItem(group: Group, modifier: Modifier = Modifier) {
     Card(modifier = Modifier
         .fillMaxWidth()
         .padding(8.dp)) {
@@ -43,7 +43,7 @@ fun ChatItem(chat: Chat, modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(start = 8.dp),
             ) {
                 Text(
-                    text = chat.title,
+                    text = group.title,
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier
@@ -51,7 +51,7 @@ fun ChatItem(chat: Chat, modifier: Modifier = Modifier) {
                         .padding(bottom = 2.dp)
                 )
                 Text(
-                    text = chat.message,
+                    text = group.message,
                     textAlign = TextAlign.Justify,
                     modifier = Modifier.wrapContentWidth()
                 )
