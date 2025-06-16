@@ -13,6 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -64,7 +70,15 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-
+        HorizontalDivider(modifier = modifier, thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        ProfileOptionItem(icon = Icons.Default.Person, text = "Account Info")
+        HorizontalDivider(modifier = modifier, thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        ProfileOptionItem(icon = Icons.Default.Settings, text = "Settings")
+        HorizontalDivider(modifier = modifier, thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        ProfileOptionItem(icon = Icons.Default.Notifications, text = "Notifications")
+        HorizontalDivider(modifier = modifier, thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        ProfileOptionItem(icon = Icons.Default.ExitToApp, text = "Log Out")
+        HorizontalDivider(modifier = modifier, thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
     }
 }
 
