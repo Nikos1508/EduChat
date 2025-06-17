@@ -1,16 +1,27 @@
 package com.example.educhat.ui.item
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -23,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.educhat.ui.components.MessageItem
@@ -69,16 +81,46 @@ fun NotesList(modifier: Modifier = Modifier) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .imePadding() // this is key
+                    .imePadding()
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
                     value = newNote,
                     onValueChange = { newNote = it },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Type a message...") },
+                    shape = RoundedCornerShape(24.dp),
+                    leadingIcon = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Image,
+                                contentDescription = "Add Image",
+                                modifier = Modifier
+                                    .clickable {  }
+                                    .padding(start = 6.dp)
+                                    .size(30.dp),
+                                tint = Color.Gray
+                            )
+                            Icon(
+                                imageVector = Icons.Filled.EmojiEmotions,
+                                contentDescription = "Add Sticker",
+                                modifier = Modifier
+                                    .clickable {  }
+                                    .padding(end = 6.dp)
+                                    .size(30.dp),
+                                tint = Color.Gray
+                            )
+                        }
+                    },
+                    singleLine = false
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+
+                Spacer(modifier = Modifier.width(4.dp))
+
                 Button(
                     onClick = {
                         scope.launch {
@@ -94,9 +136,12 @@ fun NotesList(modifier: Modifier = Modifier) {
                                 e.printStackTrace()
                             }
                         }
-                    }
+                    },
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(12.dp),
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    Text("Save")
+                    Icon(Icons.Default.Send, contentDescription = "Send")
                 }
             }
         }
