@@ -41,29 +41,42 @@ android {
 }
 
 dependencies {
+    // Core libraries
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.activity:activity-ktx:1.8.0")
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+    // Compose BOM (use this BOM to align all Compose dependencies)
+    implementation(platform("androidx.compose:compose-bom:2024.05.00"))
 
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    // Compose UI dependencies without explicit versions (managed by BOM)
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.ui:ui-graphics")
 
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // Navigation
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("com.google.android.material:material:1.10.0")
+
+    // Compose Preview/Debug
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2025.06.01"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+
+    // Supabase - This is RC, but latest stable might not be available
     implementation(platform("io.github.jan-tennert.supabase:bom:3.2.0-rc-1"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
+
+    // Networking (Ktor)
     implementation("io.ktor:ktor-client-android:3.1.3")
-    implementation("io.github.jan-tennert.supabase:postgrest-kt:3.1.4")
 }

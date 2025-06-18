@@ -1,9 +1,6 @@
 package com.example.educhat
 
-import android.os.Build
 import android.os.Bundle
-import android.view.WindowInsets
-import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,29 +9,80 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.view.WindowCompat
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.educhat.ui.components.TopBar
 import com.example.educhat.ui.item.ChatScreen
+import com.example.educhat.ui.item.HomeScreen
+import com.example.educhat.ui.item.ProfileScreen
 import com.example.educhat.ui.theme.EduChatTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowCompat.setDecorFitsSystemWindows(window, false)
-
-                window.insetsController?.apply {
-                    hide(WindowInsets.Type.navigationBars())
-                    systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                }
-            }
-
             EduChatTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ChatScreen( modifier = Modifier.padding(innerPadding) )
+                    EduChatApp(modifier = Modifier.padding(innerPadding))
                 }
+            }
+        }
+    }
+}
+
+enum class HomeScreen {
+    Home,
+    Profile,
+    Chat
+}
+
+@Composable
+fun EduChatApp(
+    modifier: Modifier,
+    navController: NavHostController = rememberNavController()
+) {
+    Scaffold(
+        topBar = {
+            TopBar(
+                onNavigate = { screen ->
+                    when (screen) {
+                        HomeScreen.Home -> navController.navigate("home")
+                        HomeScreen.Profile -> navController.navigate("profile")
+                        HomeScreen.Chat -> navController.navigate("chat")
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = HomeScreen.Home.name,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(route = HomeScreen.Home.name) {
+                HomeScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                )
+            }
+            composable(route = HomeScreen.Profile.name) {
+                ProfileScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                )
+            }
+            composable(route = HomeScreen.Chat.name) {
+                ChatScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                )
             }
         }
     }
