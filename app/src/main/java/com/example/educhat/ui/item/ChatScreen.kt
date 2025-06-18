@@ -21,10 +21,13 @@ import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,7 +61,7 @@ data class Note(
     val body: String
 )
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun NotesList(modifier: Modifier = Modifier) {
     var notes by remember { mutableStateOf<List<Note>>(emptyList()) }
@@ -116,7 +119,10 @@ fun NotesList(modifier: Modifier = Modifier) {
                             )
                         }
                     },
-                    singleLine = false
+                    singleLine = false,
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))

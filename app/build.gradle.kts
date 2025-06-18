@@ -9,6 +9,11 @@ android {
     namespace = "com.example.educhat"
     compileSdk = 35
 
+    val localProps = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
+
+    val key = localProps.getProperty("supabaseKey") ?: ""
+    val url = localProps.getProperty("supabaseUrl") ?: ""
+
     defaultConfig {
         applicationId = "com.example.educhat"
         minSdk = 24
@@ -17,6 +22,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "supabaseKey", "\"$key\"")
+        buildConfigField("String", "supabaseUrl", "\"$url\"")
     }
 
     buildTypes {
@@ -37,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -59,6 +68,7 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("com.google.android.material:material:1.10.0")
+    implementation(libs.googleid)
 
     // Compose Preview/Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
@@ -71,12 +81,18 @@ dependencies {
     androidTestImplementation(platform("androidx.compose:compose-bom:2025.06.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
-    // Supabase - This is RC, but latest stable might not be available
+    // Supabase
     implementation(platform("io.github.jan-tennert.supabase:bom:3.2.0-rc-1"))
-    implementation("io.github.jan-tennert.supabase:postgrest-kt")
-    implementation("io.github.jan-tennert.supabase:auth-kt")
-    implementation("io.github.jan-tennert.supabase:realtime-kt")
+    implementation("io.github.jan-tennert.supabase:gotrue-kt:1.3.2")
+    implementation("io.github.jan-tennert.supabase:supabase-kt:1.3.3")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:1.3.2")
+    implementation("io.github.jan-tennert.supabase:auth-kt:1.3.2")
+    implementation("io.github.jan-tennert.supabase:realtime-kt:1.3.2")
+    implementation("io.ktor:ktor-client-cio:3.1.3")
 
     // Networking (Ktor)
     implementation("io.ktor:ktor-client-android:3.1.3")
+
+    //View Model
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
 }
