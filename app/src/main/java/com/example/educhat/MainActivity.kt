@@ -3,37 +3,21 @@ package com.example.educhat
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.educhat.ui.components.LoadingComponent
 import com.example.educhat.ui.components.TopBar
 import com.example.educhat.ui.item.ChatScreen
 import com.example.educhat.ui.item.HomeScreen
 import com.example.educhat.ui.item.ProfileScreen
-import com.example.educhat.ui.model.UserState
 import com.example.educhat.ui.theme.EduChatTheme
 
 class MainActivity : ComponentActivity() {
@@ -43,13 +27,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             EduChatTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(modifier = Modifier.padding(innerPadding))
+                    EduChatApp(modifier = Modifier.padding(innerPadding), navController = rememberNavController())
                 }
             }
         }
     }
 }
 
+
+/*
 @Composable
 fun MainScreen(
     viewModel: SupabaseAuthViewModel = viewModel(),
@@ -147,6 +133,8 @@ fun MainScreen(
     }
 }
 
+*/
+
 
 
 enum class HomeScreen {
@@ -207,7 +195,8 @@ fun EduChatApp(
 @Composable
 fun EduChatAppPreviewLight() {
     EduChatTheme {
-        MainScreen(modifier = Modifier.padding(4.dp))
+        EduChatApp(modifier = Modifier.padding(4.dp), navController = rememberNavController())
+
     }
 }
 
@@ -215,6 +204,7 @@ fun EduChatAppPreviewLight() {
 @Composable
 fun EduChatAppPreviewDark() {
     EduChatTheme (darkTheme = true) {
-        MainScreen(modifier = Modifier.padding(4.dp))
+        EduChatApp(modifier = Modifier.padding(4.dp), navController = rememberNavController())
+
     }
 }

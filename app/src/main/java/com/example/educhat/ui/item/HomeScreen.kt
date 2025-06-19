@@ -6,8 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.educhat.data.Groups
 import com.example.educhat.ui.components.GroupItem
-import com.example.educhat.ui.data.Groups
 import com.example.educhat.ui.model.Group
 
 @Composable

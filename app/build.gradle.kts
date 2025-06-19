@@ -1,18 +1,16 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    kotlin("plugin.serialization") version "2.1.20"
+    kotlin("plugin.serialization") version "2.1.10"
 }
 
 android {
     namespace = "com.example.educhat"
     compileSdk = 35
-
-    val localProps = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
-
-    val key = localProps.getProperty("supabaseKey") ?: ""
-    val url = localProps.getProperty("supabaseUrl") ?: ""
 
     defaultConfig {
         applicationId = "com.example.educhat"
@@ -23,8 +21,18 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "supabaseKey", "\"$key\"")
-        buildConfigField("String", "supabaseUrl", "\"$url\"")
+        val localProps = Properties()
+        val localPropsFile = rootProject.file("local.properties")
+
+        if (localPropsFile.exists()) {
+            localProps.load(FileInputStream(localPropsFile))
+        }
+
+        val supabaseKey = localProps.getProperty("supabaseKey") ?: ""
+        val supabaseUrl = localProps.getProperty("supabaseUrl") ?: ""
+
+        buildConfigField("String", "supabaseKey", "\"$supabaseKey\"")
+        buildConfigField("String", "supabaseUrl", "\"$supabaseUrl\"")
     }
 
     buildTypes {
@@ -78,11 +86,11 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.06.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.05.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
     // Supabase
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.2.0-rc-1"))
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.0"))
     implementation("io.github.jan-tennert.supabase:gotrue-kt:1.3.2")
     implementation("io.github.jan-tennert.supabase:supabase-kt:1.3.3")
     implementation("io.github.jan-tennert.supabase:postgrest-kt:1.3.2")

@@ -1,4 +1,4 @@
-package com.example.educhat.ui.data
+package com.example.educhat.data
 
 import com.example.educhat.ui.model.Group
 

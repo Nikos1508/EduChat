@@ -1,14 +1,14 @@
-package com.example.educhat.ui.data.network
+package com.example.educhat.data.network
 
 import com.example.educhat.BuildConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.GoTrue
 
 object SupabaseClient {
-    var client = createSupabaseClient(
+    val client = createSupabaseClient(
+        supabaseUrl = BuildConfig.supabaseUrl,
         supabaseKey = BuildConfig.supabaseKey,
-        supabaseUrl = BuildConfig.supabaseUrl
-    ){
+    ) {
         install(GoTrue)
     }
 }

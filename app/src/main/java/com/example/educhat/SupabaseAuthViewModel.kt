@@ -5,7 +5,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.educhat.ui.data.network.SupabaseClient.client
+import com.example.educhat.data.network.SupabaseClient.client
 import com.example.educhat.ui.model.UserState
 import com.example.educhat.ui.utils.SharedPreferenceHelper
 import io.github.jan.supabase.gotrue.gotrue
@@ -24,31 +24,24 @@ class SupabaseAuthViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
-                _userState.value = UserState.Loading
                 client.gotrue.signUpWith(Email) {
                     email = userEmail
                     password = userPassword
                 }
-                saveToken(context)
-                _userState.value = UserState.Success("Registered successfully!")
+
+                // Get token after sign up
+                val accessToken = client.gotrue.currentAccessTokenOrNull()
+
+                if (!accessToken.isNullOrEmpty()) {
+                    saveToken(context, accessToken)
+                    _userState.value = UserState.Success("Registered successfully!")
+                } else {
+                    _userState.value = UserState.Error("Sign up failed: No access token received")
+                }
             } catch (e: Exception) {
-                _userState.value = UserState.Error("Error: ${e.message}")
+                _userState.value = UserState.Error("Error: ${e.message ?: "Unknown error"}")
             }
-
         }
-    }
-
-    private fun saveToken(context: Context) {
-        viewModelScope.launch {
-            val accessToken = client.gotrue.currentAccessTokenOrNull()
-            val sharedPref = SharedPreferenceHelper(context)
-            sharedPref.saveStringData("accessToken", accessToken)
-        }
-    }
-
-    private fun getToken(context: Context): String? {
-        val sharedPref = SharedPreferenceHelper(context)
-        return sharedPref.getStringData("accessToken")
     }
 
     fun login(
@@ -59,53 +52,65 @@ class SupabaseAuthViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
-                _userState.value = UserState.Loading
                 client.gotrue.loginWith(Email) {
                     email = userEmail
                     password = userPassword
                 }
-                saveToken(context)
-                _userState.value = UserState.Success("Logged in successfully!")
+
+                val accessToken = client.gotrue.currentAccessTokenOrNull()
+
+                if (!accessToken.isNullOrEmpty()) {
+                    saveToken(context, accessToken)
+                    _userState.value = UserState.Success("Logged in successfully!")
+                } else {
+                    _userState.value = UserState.Error("Login failed: No access token received")
+                }
             } catch (e: Exception) {
-                _userState.value = UserState.Error("Error: ${e.message}")
+                _userState.value = UserState.Error("Error: ${e.message ?: "Unknown error"}")
             }
         }
+    }
+
+    private fun saveToken(context: Context, token: String) {
+        val sharedPref = SharedPreferenceHelper(context)
+        sharedPref.saveStringData("accessToken", token)
+    }
+
+    private fun getToken(context: Context): String? {
+        val sharedPref = SharedPreferenceHelper(context)
+        return sharedPref.getStringData("accessToken")
     }
 
     fun logout(context: Context) {
-        val sharedPref = SharedPreferenceHelper(context)
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
-                _userState.value = UserState.Loading
                 client.gotrue.logout()
+                val sharedPref = SharedPreferenceHelper(context)
                 sharedPref.clearPreferences()
                 _userState.value = UserState.Success("Logged out successfully!")
             } catch (e: Exception) {
-                _userState.value = UserState.Error("Error: ${e.message}")
+                _userState.value = UserState.Error("Error: ${e.message ?: "Unknown error"}")
             }
         }
     }
 
-    fun isUserLoggedIn(
-        context: Context,
-    ) {
+    fun isUserLoggedIn(context: Context) {
         viewModelScope.launch {
+            _userState.value = UserState.Loading
             try {
-                _userState.value = UserState.Loading
                 val token = getToken(context)
-                if(token.isNullOrEmpty()) {
+                if (token.isNullOrEmpty()) {
                     _userState.value = UserState.Success("User not logged in!")
                 } else {
-                    client.gotrue.retrieveUser(token)
+                    client.gotrue.retrieveUser(token) // throws if invalid
                     client.gotrue.refreshCurrentSession()
-                    saveToken(context)
+                    saveToken(context, client.gotrue.currentAccessTokenOrNull() ?: "")
                     _userState.value = UserState.Success("User already logged in!")
                 }
             } catch (e: Exception) {
-                _userState.value = UserState.Error("Error: ${e.message}")
+                _userState.value = UserState.Error("Error: ${e.message ?: "Unknown error"}")
             }
         }
     }
-
 }
