@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.educhat.ui.components.TopBar
 import com.example.educhat.ui.item.ChatScreen
@@ -148,15 +149,23 @@ fun EduChatApp(
     modifier: Modifier,
     navController: NavHostController = rememberNavController()
 ) {
+    val navBackStackEntry = navController.currentBackStackEntryAsState()
+
+    val currentRoute = navBackStackEntry.value?.destination?.route ?: HomeScreen.Home.name
+
+    val currentScreen = HomeScreen.values().find { it.name == currentRoute } ?: HomeScreen.Home
+
     Scaffold(
         topBar = {
             TopBar(
+                currentScreen = currentScreen,
                 onNavigate = { screen ->
-                    when (screen) {
-                        HomeScreen.Home -> navController.navigate("home")
-                        HomeScreen.Profile -> navController.navigate("profile")
-                        HomeScreen.Chat -> navController.navigate("chat")
+                    if (screen != currentScreen) {
+                        navController.navigate(screen.name)
                     }
+                },
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -168,9 +177,8 @@ fun EduChatApp(
         ) {
             composable(route = HomeScreen.Home.name) {
                 HomeScreen(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    onGroupClick = { navController.navigate("chat") }
                 )
             }
             composable(route = HomeScreen.Profile.name) {
