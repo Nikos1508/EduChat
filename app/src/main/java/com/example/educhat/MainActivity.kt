@@ -3,30 +3,16 @@ package com.example.educhat
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.educhat.data.model.UserState
-import com.example.educhat.ui.components.LoadingComponent
+import com.example.educhat.ui.item.LoginScreen
 import com.example.educhat.ui.theme.EduChatTheme
-import io.ktor.websocket.Frame.Text
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +21,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             EduChatTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerpadding ->
+
                     MainScreen(modifier = Modifier.padding(innerpadding))
                     /*
                     EduChatApp(modifier = Modifier.padding(innerPadding), navController = rememberNavController())
@@ -45,7 +32,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
+/*
 @Composable
 fun MainScreen(
     viewModel: SupabaseAuthViewModel = viewModel(),
@@ -139,11 +126,27 @@ fun MainScreen(
     }
 }
 
+*/
 
 enum class HomeScreen {
+    Login,
     Home,
     Profile,
     Chat
+}
+
+@Composable
+fun MainScreen(
+    viewModel: SupabaseAuthViewModel = viewModel(),
+    modifier: Modifier
+) {
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.isUserLoggedIn(context)
+    }
+
+    LoginScreen(viewModel = viewModel)
 }
 
 /*
@@ -202,29 +205,3 @@ fun EduChatApp(
     }
 }
 */
-
-@Preview(showBackground = true)
-@Composable
-fun EduChatAppPreviewLight() {
-    EduChatTheme {
-        MainScreen(modifier = Modifier.padding(4.dp))
-        /*
-        EduChatApp(modifier = Modifier.padding(4.dp), navController = rememberNavController())
-
-         */
-
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun EduChatAppPreviewDark() {
-    EduChatTheme (darkTheme = true) {
-        MainScreen(modifier = Modifier.padding(4.dp))
-        /*
-        EduChatApp(modifier = Modifier.padding(4.dp), navController = rememberNavController())
-
-         */
-
-    }
-}
