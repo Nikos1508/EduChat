@@ -1,4 +1,4 @@
-package com.example.educhat.ui.model
+package com.example.educhat.data.model
 
 sealed class UserState {
     object Loading: UserState()

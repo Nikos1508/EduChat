@@ -1,16 +1,21 @@
-import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    kotlin("plugin.serialization") version "2.1.10"
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.kotlin.compose) // Make sure libs.versions.toml has this alias properly configured
+    kotlin("plugin.serialization") version "1.9.10"  // Use Kotlin 1.9.10 to align with Compose and stable tooling
 }
 
 android {
     namespace = "com.example.educhat"
     compileSdk = 35
+
+    val localProperties = Properties().apply {
+        load(rootProject.file("local.properties").inputStream())
+    }
+    val key: String = localProperties.getProperty("supabaseKey") ?: ""
+    val url: String = localProperties.getProperty("supabaseUrl") ?: ""
 
     defaultConfig {
         applicationId = "com.example.educhat"
@@ -20,19 +25,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        val localProps = Properties()
-        val localPropsFile = rootProject.file("local.properties")
-
-        if (localPropsFile.exists()) {
-            localProps.load(FileInputStream(localPropsFile))
+        vectorDrawables {
+            useSupportLibrary = true
         }
-
-        val supabaseKey = localProps.getProperty("supabaseKey") ?: ""
-        val supabaseUrl = localProps.getProperty("supabaseUrl") ?: ""
-
-        buildConfigField("String", "supabaseKey", "\"$supabaseKey\"")
-        buildConfigField("String", "supabaseUrl", "\"$supabaseUrl\"")
+        buildConfigField("String", "supabaseKey", "\"$key\"")
+        buildConfigField("String", "supabaseUrl", "\"$url\"")
     }
 
     buildTypes {
@@ -44,28 +41,43 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
         buildConfig = true
     }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.3" // Use a stable Compose compiler compatible with Kotlin 1.9.x
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 dependencies {
+
+
     // Core libraries
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.activity:activity-ktx:1.8.0")
 
-    // Compose BOM (use this BOM to align all Compose dependencies)
+    // Compose BOM to manage versions
     implementation(platform("androidx.compose:compose-bom:2024.05.00"))
 
-    // Compose UI dependencies without explicit versions (managed by BOM)
+    // Compose UI dependencies (versions managed by BOM)
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.ui:ui-graphics")
@@ -76,7 +88,6 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("com.google.android.material:material:1.10.0")
-    implementation(libs.googleid)
 
     // Compose Preview/Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
@@ -89,18 +100,16 @@ dependencies {
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.05.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
-    // Supabase
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.0"))
-    implementation("io.github.jan-tennert.supabase:gotrue-kt:1.3.2")
-    implementation("io.github.jan-tennert.supabase:supabase-kt:1.3.3")
-    implementation("io.github.jan-tennert.supabase:postgrest-kt:1.3.2")
-    implementation("io.github.jan-tennert.supabase:auth-kt:1.3.2")
-    implementation("io.github.jan-tennert.supabase:realtime-kt:1.3.2")
-    implementation("io.ktor:ktor-client-cio:3.1.3")
+    // Supabase BOM and dependencies without explicit versions (managed by BOM)
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.4"))
+    implementation("io.github.jan-tennert.supabase:supabase-kt")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:realtime-kt")
+    implementation("io.github.jan-tennert.supabase:auth-kt")
 
     // Networking (Ktor)
-    implementation("io.ktor:ktor-client-android:3.1.3")
+    implementation("io.ktor:ktor-client-cio:3.1.3")
 
-    //View Model
+    // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
 }

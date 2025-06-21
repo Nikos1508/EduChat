@@ -25,8 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.educhat.data.Groups
+import com.example.educhat.data.model.Group
 import com.example.educhat.ui.components.GroupItem
-import com.example.educhat.ui.model.Group
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -1,4 +1,4 @@
-package com.example.educhat.ui.utils
+package com.example.educhat.utils
 
 import android.content.Context
 

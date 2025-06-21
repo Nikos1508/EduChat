@@ -1,6 +1,6 @@
 package com.example.educhat.data
 
-import com.example.educhat.ui.model.Group
+import com.example.educhat.data.model.Group
 
 class Groups() {
     fun loadGroups(): List<Group> {

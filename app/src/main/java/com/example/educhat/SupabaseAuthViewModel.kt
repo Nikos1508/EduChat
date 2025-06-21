@@ -5,11 +5,12 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.educhat.data.model.UserState
 import com.example.educhat.data.network.SupabaseClient.client
-import com.example.educhat.ui.model.UserState
-import com.example.educhat.ui.utils.SharedPreferenceHelper
-import io.github.jan.supabase.gotrue.gotrue
-import io.github.jan.supabase.gotrue.providers.builtin.Email
+import com.example.educhat.utils.SharedPreferenceHelper
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.exceptions.RestException
 import kotlinx.coroutines.launch
 
 class SupabaseAuthViewModel : ViewModel() {
@@ -22,26 +23,35 @@ class SupabaseAuthViewModel : ViewModel() {
         userPassword: String,
     ) {
         viewModelScope.launch {
-            _userState.value = UserState.Loading
             try {
-                client.gotrue.signUpWith(Email) {
+                _userState.value = UserState.Loading
+
+                client.auth.signUpWith(Email) {
                     email = userEmail
                     password = userPassword
                 }
 
-                // Get token after sign up
-                val accessToken = client.gotrue.currentAccessTokenOrNull()
-
-                if (!accessToken.isNullOrEmpty()) {
-                    saveToken(context, accessToken)
-                    _userState.value = UserState.Success("Registered successfully!")
-                } else {
-                    _userState.value = UserState.Error("Sign up failed: No access token received")
-                }
-            } catch (e: Exception) {
-                _userState.value = UserState.Error("Error: ${e.message ?: "Unknown error"}")
+                saveToken(context)
+                _userState.value = UserState.Success("Registered successfully!")
+            } catch(e: Exception) {
+                _userState.value = UserState.Error(e.message ?: "")
             }
+
         }
+    }
+
+    private fun saveToken(context: Context) {
+        viewModelScope.launch {
+            val accessToken = client.auth.currentAccessTokenOrNull()
+            val sharedPref = SharedPreferenceHelper(context)
+            sharedPref.saveStringData("accessToken",accessToken)
+        }
+
+    }
+
+    private fun getToken(context: Context): String? {
+        val sharedPref = SharedPreferenceHelper(context)
+        return sharedPref.getStringData("accessToken")
     }
 
     fun login(
@@ -50,67 +60,58 @@ class SupabaseAuthViewModel : ViewModel() {
         userPassword: String,
     ) {
         viewModelScope.launch {
-            _userState.value = UserState.Loading
             try {
-                client.gotrue.loginWith(Email) {
+                _userState.value = UserState.Loading
+
+                client.auth.signInWith(Email) {
                     email = userEmail
                     password = userPassword
                 }
 
-                val accessToken = client.gotrue.currentAccessTokenOrNull()
-
-                if (!accessToken.isNullOrEmpty()) {
-                    saveToken(context, accessToken)
-                    _userState.value = UserState.Success("Logged in successfully!")
-                } else {
-                    _userState.value = UserState.Error("Login failed: No access token received")
-                }
+                saveToken(context)
+                _userState.value = UserState.Success("Logged in successfully!")
             } catch (e: Exception) {
-                _userState.value = UserState.Error("Error: ${e.message ?: "Unknown error"}")
+                _userState.value = UserState.Error(e.message ?: "")
             }
+
         }
-    }
-
-    private fun saveToken(context: Context, token: String) {
-        val sharedPref = SharedPreferenceHelper(context)
-        sharedPref.saveStringData("accessToken", token)
-    }
-
-    private fun getToken(context: Context): String? {
-        val sharedPref = SharedPreferenceHelper(context)
-        return sharedPref.getStringData("accessToken")
     }
 
     fun logout(context: Context) {
+        val sharedPref = SharedPreferenceHelper(context)
         viewModelScope.launch {
-            _userState.value = UserState.Loading
             try {
-                client.gotrue.logout()
-                val sharedPref = SharedPreferenceHelper(context)
+                _userState.value = UserState.Loading
+
+                client.auth.signOut()
+
                 sharedPref.clearPreferences()
                 _userState.value = UserState.Success("Logged out successfully!")
             } catch (e: Exception) {
-                _userState.value = UserState.Error("Error: ${e.message ?: "Unknown error"}")
+                _userState.value = UserState.Error(e.message ?: "")
             }
         }
     }
 
-    fun isUserLoggedIn(context: Context) {
+    fun isUserLoggedIn(
+        context: Context,
+    ) {
         viewModelScope.launch {
-            _userState.value = UserState.Loading
             try {
+                _userState.value = UserState.Loading
                 val token = getToken(context)
-                if (token.isNullOrEmpty()) {
+                if(token.isNullOrEmpty()) {
                     _userState.value = UserState.Success("User not logged in!")
                 } else {
-                    client.gotrue.retrieveUser(token) // throws if invalid
-                    client.gotrue.refreshCurrentSession()
-                    saveToken(context, client.gotrue.currentAccessTokenOrNull() ?: "")
+                    client.auth.retrieveUser(token)
+                    client.auth.refreshCurrentSession()
+                    saveToken(context)
                     _userState.value = UserState.Success("User already logged in!")
                 }
-            } catch (e: Exception) {
-                _userState.value = UserState.Error("Error: ${e.message ?: "Unknown error"}")
+            } catch (e: RestException) {
+                _userState.value = UserState.Error(e.error)
             }
         }
     }
+
 }
