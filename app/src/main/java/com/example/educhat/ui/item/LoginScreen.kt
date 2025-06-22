@@ -1,5 +1,6 @@
 package com.example.educhat.ui.item
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,12 +45,63 @@ import com.example.educhat.data.model.UserState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(viewModel: SupabaseAuthViewModel) {
+fun LoginScreen(
+    onLoginSuccess: () -> Unit,
+    onSignUpClick: () -> Unit,
+    viewModel: SupabaseAuthViewModel
+) {
+    // val userState by viewModel.userState
+    val userStateValue = viewModel.userState.value
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
-    val userState by viewModel.userState
+
+    var loginAttemptMade by remember { mutableStateOf(false) }
+    var signUpAttemptMade by remember { mutableStateOf(false) }
+
     var currentUserState by remember { mutableStateOf("") }
+
+
+    LaunchedEffect(userStateValue, loginAttemptMade, signUpAttemptMade) {
+        if (loginAttemptMade) {
+            when (userStateValue) {
+                is UserState.Success -> {
+                    if (userStateValue.message == "Logged in successfully!") {
+                        Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
+                        onLoginSuccess()
+                        // loginAttemptMade = false // Reset after handling (I may need this so I have keep it here)
+                    }
+                }
+                is UserState.Error -> {
+                    Toast.makeText(context, "Login Failed: ${userStateValue.message}", Toast.LENGTH_LONG).show()
+                    loginAttemptMade = false // Reset to allow another attempt
+                }
+                UserState.Loading -> { /* Handled by button state */ }
+            }
+        } else if (signUpAttemptMade) {
+            when (userStateValue) {
+                is UserState.Success -> {
+                    if (userStateValue.message == "Registered successfully!") {
+                        Toast.makeText(context, userStateValue.message, Toast.LENGTH_SHORT).show()
+                        // Decide what to do after sign-up:
+                        // 1. Automatically log them in (ViewModel's signUp might do this)
+                        // 2. Navigate to login so they can log in with new credentials
+                        // 3. Directly call onLoginSuccess if signUp also means logged in
+                        // These are the 3 things that I might do, I will keep them here until tmr)
+
+                        onSignUpClick()
+                        // signUpAttemptMade = false // Reset
+                    }
+                }
+                is UserState.Error -> {
+                    Toast.makeText(context, "Sign Up Failed: ${userStateValue.message}", Toast.LENGTH_LONG).show()
+                    signUpAttemptMade = false
+                }
+                UserState.Loading -> { /* Handled by button state */ }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -83,7 +136,7 @@ fun LoginScreen(viewModel: SupabaseAuthViewModel) {
                 Text(
                     text = "Email",
                     fontSize = if (emailFocused || email.isNotEmpty()) 12.sp else 16.sp,
-                    color = if (emailFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                     color = if (emailFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = if (emailFocused || email.isNotEmpty()) 4.dp else 8.dp)
                 )
 
@@ -171,7 +224,13 @@ fun LoginScreen(viewModel: SupabaseAuthViewModel) {
 
             Button(
                 onClick = {
-                    viewModel.login(context, email, password)
+                    if (email.isNotBlank() && password.isNotBlank()) {
+                        loginAttemptMade = true // Set the flag
+                        signUpAttemptMade = false
+                        viewModel.login(context, email, password)
+                    } else {
+                        Toast.makeText(context, "Email and password cannot be empty", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -180,39 +239,57 @@ fun LoginScreen(viewModel: SupabaseAuthViewModel) {
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                ),
+                enabled = userStateValue != UserState.Loading || (!loginAttemptMade && !signUpAttemptMade)
             ) {
-                Text("Login")
+                if (userStateValue == UserState.Loading && loginAttemptMade) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text("Login")
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            TextButton(
-                onClick = {
+            TextButton(onClick = {
+                if (email.isNotBlank() && password.isNotBlank()) {
+                    signUpAttemptMade = true
+                    loginAttemptMade = false
                     viewModel.signUp(context, email, password)
+                } else {
+                    Toast.makeText(context, "Email and password cannot be empty for sign up", Toast.LENGTH_SHORT).show()
                 }
-            ) {
+                // onSignUpClick() // This lambda is now more for "what to do AFTER successful signup"
+                // or if you want to navigate to a separate fuller signup screen.
+                // For now, it's called from LaunchedEffect after successful registration.
+                // I will make the signup page tmr
+
+            }) {
                 Text("Sign Up")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            when (userState) {
+            when (userStateValue) {
                 is UserState.Loading -> {
-                    CircularProgressIndicator()
+                    if (!loginAttemptMade && !signUpAttemptMade) {
+                        // CircularProgressIndicator() // Might be redundant because MainActivity shows one
+                    }
                 }
-
-                is UserState.Success -> {
-                    currentUserState = (userState as UserState.Success).message
-                    Text(currentUserState, color = MaterialTheme.colorScheme.onPrimary)
-                }
-
                 is UserState.Error -> {
-                    currentUserState = (userState as UserState.Error).message
-                    Text(currentUserState, color = MaterialTheme.colorScheme.error)
+                    if (!loginAttemptMade && !signUpAttemptMade) {
+                        Text(userStateValue.message, color = MaterialTheme.colorScheme.error)
+                    }
                 }
-
-                else -> {}
+                is UserState.Success -> {
+                    if (!loginAttemptMade && !signUpAttemptMade &&
+                        userStateValue.message != "Logged in successfully!" &&
+                        userStateValue.message != "Registered successfully!" &&
+                        userStateValue.message != "User already logged in!" &&
+                        userStateValue.message != "User not logged in!") {
+                        // Text(userStateValue.message, color = MaterialTheme.colorScheme.secondary)
+                    }
+                }
             }
         }
     }

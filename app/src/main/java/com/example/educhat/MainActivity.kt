@@ -8,10 +8,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.educhat.ui.components.TopBar
+import com.example.educhat.ui.item.ChatScreen
+import com.example.educhat.ui.item.HomeScreen
 import com.example.educhat.ui.item.LoginScreen
+import com.example.educhat.ui.item.ProfileScreen
 import com.example.educhat.ui.theme.EduChatTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,115 +31,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             EduChatTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerpadding ->
-
-                    MainScreen(modifier = Modifier.padding(innerpadding))
-                    /*
-                    EduChatApp(modifier = Modifier.padding(innerPadding), navController = rememberNavController())
-                     */
-                }
+                EduChatApp()
             }
         }
     }
 }
 
-/*
-@Composable
-fun MainScreen(
-    viewModel: SupabaseAuthViewModel = viewModel(),
-    modifier: Modifier
-) {
-    val context = LocalContext.current
-    val userState by viewModel.userState
-
-    var userEmail by remember { mutableStateOf("") }
-    var userPassword by remember { mutableStateOf("") }
-
-    var currentUserState by remember { mutableStateOf("") }
-
-    LaunchedEffect(Unit) {
-        viewModel.isUserLoggedIn(
-            context,
-        )
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp)
-    ) {
-        TextField(
-            value = userEmail,
-            placeholder = {
-                Text(text = "Enter email")
-            },
-            onValueChange = {
-                userEmail = it
-            })
-        Spacer(modifier = Modifier.padding(8.dp))
-        TextField(
-            value = userPassword,
-            placeholder = {
-                Text(text = "Enter password")
-            },
-            onValueChange = {
-                userPassword = it
-            }
-        )
-        Spacer(modifier = Modifier.padding(8.dp))
-        Button(onClick = {
-            viewModel.signUp(
-                context,
-                userEmail,
-                userPassword,
-            )
-        }) {
-            Text(text = "Sign Up")
-        }
-
-        Button(onClick = {
-            viewModel.login(
-                context,
-                userEmail,
-                userPassword,
-            )
-        }) {
-            Text(text = "Login")
-        }
-
-        Button(
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-            onClick = {
-                viewModel.logout(context)
-            }) {
-            Text(text = "Logout")
-        }
-
-        when (userState) {
-            is UserState.Loading -> {
-                LoadingComponent()
-            }
-
-            is UserState.Success -> {
-                val message = (userState as UserState.Success).message
-                currentUserState = message
-            }
-
-            is UserState.Error -> {
-                val message = (userState as UserState.Error).message
-                currentUserState = message
-            }
-        }
-
-        if (currentUserState.isNotEmpty()) {
-            Text(text = currentUserState)
-        }
-    }
-}
-
-*/
-
-enum class HomeScreen {
+enum class AppScreen {
     Login,
     Home,
     Profile,
@@ -136,65 +45,91 @@ enum class HomeScreen {
 }
 
 @Composable
-fun MainScreen(
-    viewModel: SupabaseAuthViewModel = viewModel(),
-    modifier: Modifier
-) {
-    val context = LocalContext.current
+fun EduChatApp() {
+    val navController = rememberNavController()
+    val viewModel: SupabaseAuthViewModel = viewModel() // Assuming this ViewModel exists and is set up
+    val context = LocalContext.current // Keep if needed by ViewModel
 
-    LaunchedEffect(Unit) {
+    // Get current back stack entry
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    // Determine current screen based on the route
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // Convert currentRoute (String?) to AppScreen enum
+    val currentScreen = remember(currentRoute) {
+        currentRoute?.let { routeName ->
+            try {
+                AppScreen.valueOf(routeName)
+            } catch (e: IllegalArgumentException) {
+                null // Or a default screen, or handle error
+            }
+        }
+    }
+
+
+    LaunchedEffect(Unit) { // This seems fine for one-time effects like checking login
         viewModel.isUserLoggedIn(context)
     }
 
-    LoginScreen(viewModel = viewModel)
-}
-
-/*
-@Composable
-fun EduChatApp(
-    modifier: Modifier,
-    navController: NavHostController = rememberNavController()
-) {
-    val navBackStackEntry = navController.currentBackStackEntryAsState()
-
-    val currentRoute = navBackStackEntry.value?.destination?.route ?: HomeScreen.Home.name
-
-    val currentScreen = HomeScreen.values().find { it.name == currentRoute } ?: HomeScreen.Home
-
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopBar(
-                currentScreen = currentScreen,
-                onNavigate = { screen ->
-                    if (screen != currentScreen) {
-                        navController.navigate(screen.name)
-                    }
-                },
-                onBack = {
-                    navController.popBackStack()
-                }
-            )
+            if (currentScreen != null && currentScreen != AppScreen.Login) {
+                TopBar(
+                    currentScreen = currentScreen,
+                    onNavigate = { screen -> navController.navigate(screen.name) },
+                    onBack = { navController.popBackStack() }
+                    // ChatName = if (currentScreen == AppScreen.Chat) "Some Chat Name" else null // Optional
+                )
+            }
         }
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = HomeScreen.Home.name,
-            modifier = Modifier.padding(innerPadding)
+            startDestination = AppScreen.Login.name,
+            modifier = Modifier.padding(innerPadding) // Apply padding from Scaffold
         ) {
-            composable(route = HomeScreen.Home.name) {
-                HomeScreen(
-                    modifier = Modifier.fillMaxSize(),
-                    onGroupClick = { navController.navigate("chat") }
+            composable(AppScreen.Login.name) {
+                LoginScreen(
+                    viewModel = viewModel,
+                    onLoginSuccess = {
+                        navController.navigate(AppScreen.Home.name) {
+                            popUpTo(AppScreen.Login.name) { inclusive = true }
+                            // Consider launchSingleTop = true as well
+                            // launchSingleTop = true
+                        }
+                    },
+                    onSignUpClick = {
+                        // Handle sign-up UI or navigation here if needed
+                    }
                 )
             }
-            composable(route = HomeScreen.Profile.name) {
+            composable(AppScreen.Home.name) {
+                HomeScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    onGroupClick = {
+                        navController.navigate(AppScreen.Chat.name)
+                    }
+                )
+            }
+            composable(AppScreen.Profile.name) {
                 ProfileScreen(
+                    modifier = Modifier
+                        .fillMaxSize() // Already applied by Scaffold's content area
+                        .padding(8.dp) // This is fine for additional content padding
+                )
+            }
+            // Modified Chat route to accept an optional argument (example)
+            composable(AppScreen.Chat.name + "/{groupName}") { backStackEntry ->
+                val groupName = backStackEntry.arguments?.getString("groupName")
+                ChatScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(8.dp)
                 )
             }
-            composable(route = HomeScreen.Chat.name) {
+            // Fallback Chat route if no groupName is provided (optional)
+            composable(AppScreen.Chat.name) {
                 ChatScreen(
                     modifier = Modifier
                         .fillMaxSize()
@@ -204,4 +139,3 @@ fun EduChatApp(
         }
     }
 }
-*/

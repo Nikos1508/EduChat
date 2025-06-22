@@ -17,15 +17,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.educhat.HomeScreen
+import com.example.educhat.AppScreen
 import com.example.educhat.R
 import com.example.educhat.ui.theme.EduChatTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    currentScreen: HomeScreen,
-    onNavigate: (HomeScreen) -> Unit,
+    currentScreen: AppScreen,
+    onNavigate: (AppScreen) -> Unit,
     onBack: () -> Unit,
     ChatName: String? = null
 ) {
@@ -34,25 +34,27 @@ fun TopBar(
     TopAppBar(
         title = {
             when (currentScreen) {
-                HomeScreen.Home -> Text("EduChat")
-                HomeScreen.Chat -> Text(ChatName ?: "Group Chat")
-                HomeScreen.Profile -> Text("EduChat")
+                AppScreen.Home -> Text("EduChat")
+                AppScreen.Chat -> Text(ChatName ?: "Group Chat")
+                AppScreen.Profile -> Text("EduChat")
+                AppScreen.Login -> { /* Empty For Now  */}
             }
         },
         navigationIcon = {
             when (currentScreen) {
-                HomeScreen.Profile, HomeScreen.Chat -> {
-                    IconButton(onClick = onBack) {  // just call onBack here
+                AppScreen.Profile, AppScreen.Chat -> {
+                    IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
-                else -> {}
+                AppScreen.Home -> {} // Or any other icon/action
+                AppScreen.Login -> {} // Decide if you need a navigation icon for Login
             }
         },
         actions = {
             when (currentScreen) {
-                HomeScreen.Home, HomeScreen.Chat -> {
-                    IconButton(onClick = { onNavigate(HomeScreen.Profile) }) {
+                AppScreen.Home, AppScreen.Chat -> {
+                    IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
                         Image(
                             painter = profileImage,
                             contentDescription = "Profile",
@@ -63,7 +65,8 @@ fun TopBar(
                         )
                     }
                 }
-                else -> {}
+                AppScreen.Profile -> {} // Or any other actions
+                AppScreen.Login -> {} // Decide if you need actions for Login
             }
         },
         modifier = Modifier.padding(2.dp)
@@ -75,7 +78,7 @@ fun TopBar(
 fun TopBarPreviewHome() {
     EduChatTheme {
         TopBar(
-            currentScreen = HomeScreen.Home,
+            currentScreen = AppScreen.Home,
             onNavigate = {},
             onBack = {}  // add this
         )
@@ -87,7 +90,7 @@ fun TopBarPreviewHome() {
 fun TopBarPreviewChat() {
     EduChatTheme {
         TopBar(
-            currentScreen = HomeScreen.Chat,
+            currentScreen = AppScreen.Chat,
             onNavigate = {},
             onBack = {},  // add this
             ChatName = "Math Study Group"
@@ -100,7 +103,7 @@ fun TopBarPreviewChat() {
 fun TopBarPreviewProfile() {
     EduChatTheme {
         TopBar(
-            currentScreen = HomeScreen.Profile,
+            currentScreen = AppScreen.Profile,
             onNavigate = {},
             onBack = {}  // add this
         )
