@@ -23,6 +23,7 @@ import com.example.educhat.ui.item.ChatScreen
 import com.example.educhat.ui.item.HomeScreen
 import com.example.educhat.ui.item.LoginScreen
 import com.example.educhat.ui.item.ProfileScreen
+import com.example.educhat.ui.item.SignUpScreen
 import com.example.educhat.ui.theme.EduChatTheme
 
 class MainActivity : ComponentActivity() {
@@ -39,6 +40,7 @@ class MainActivity : ComponentActivity() {
 
 enum class AppScreen {
     Login,
+    SignUp,
     Home,
     Profile,
     Chat
@@ -95,12 +97,23 @@ fun EduChatApp() {
                     onLoginSuccess = {
                         navController.navigate(AppScreen.Home.name) {
                             popUpTo(AppScreen.Login.name) { inclusive = true }
-                            // Consider launchSingleTop = true as well
-                            // launchSingleTop = true
                         }
                     },
                     onSignUpClick = {
-                        // Handle sign-up UI or navigation here if needed
+                        navController.navigate(AppScreen.SignUp.name)
+                    }
+                )
+            }
+            composable(AppScreen.SignUp.name) {
+                SignUpScreen(
+                    viewModel = viewModel, // pass your shared ViewModel if needed
+                    onSignUpComplete = {
+                        navController.navigate(AppScreen.Login.name) {
+                            popUpTo(AppScreen.SignUp.name) { inclusive = true }
+                        }
+                    },
+                    onBackToLogin = {
+                        navController.popBackStack(AppScreen.Login.name, inclusive = false)
                     }
                 )
             }

@@ -50,55 +50,26 @@ fun LoginScreen(
     onSignUpClick: () -> Unit,
     viewModel: SupabaseAuthViewModel
 ) {
-    // val userState by viewModel.userState
     val userStateValue = viewModel.userState.value
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
-
     var loginAttemptMade by remember { mutableStateOf(false) }
-    var signUpAttemptMade by remember { mutableStateOf(false) }
 
-    var currentUserState by remember { mutableStateOf("") }
-
-
-    LaunchedEffect(userStateValue, loginAttemptMade, signUpAttemptMade) {
+    LaunchedEffect(userStateValue, loginAttemptMade) {
         if (loginAttemptMade) {
             when (userStateValue) {
                 is UserState.Success -> {
-                    if (userStateValue.message == "Logged in successfully!") {
+                    if (userStateValue.message == "Login Successful!") {
                         Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
                         onLoginSuccess()
-                        // loginAttemptMade = false // Reset after handling (I may need this so I have keep it here)
                     }
                 }
                 is UserState.Error -> {
                     Toast.makeText(context, "Login Failed: ${userStateValue.message}", Toast.LENGTH_LONG).show()
-                    loginAttemptMade = false // Reset to allow another attempt
+                    loginAttemptMade = false
                 }
-                UserState.Loading -> { /* Handled by button state */ }
-            }
-        } else if (signUpAttemptMade) {
-            when (userStateValue) {
-                is UserState.Success -> {
-                    if (userStateValue.message == "Registered successfully!") {
-                        Toast.makeText(context, userStateValue.message, Toast.LENGTH_SHORT).show()
-                        // Decide what to do after sign-up:
-                        // 1. Automatically log them in (ViewModel's signUp might do this)
-                        // 2. Navigate to login so they can log in with new credentials
-                        // 3. Directly call onLoginSuccess if signUp also means logged in
-                        // These are the 3 things that I might do, I will keep them here until tmr)
-
-                        onSignUpClick()
-                        // signUpAttemptMade = false // Reset
-                    }
-                }
-                is UserState.Error -> {
-                    Toast.makeText(context, "Sign Up Failed: ${userStateValue.message}", Toast.LENGTH_LONG).show()
-                    signUpAttemptMade = false
-                }
-                UserState.Loading -> { /* Handled by button state */ }
+                UserState.Loading -> { /* Show progress in UI */ }
             }
         }
     }
@@ -177,6 +148,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             var passwordFocused by remember { mutableStateOf(false) }
+
             Column {
                 Text(
                     text = "Password",
@@ -225,8 +197,7 @@ fun LoginScreen(
             Button(
                 onClick = {
                     if (email.isNotBlank() && password.isNotBlank()) {
-                        loginAttemptMade = true // Set the flag
-                        signUpAttemptMade = false
+                        loginAttemptMade = true
                         viewModel.login(context, email, password)
                     } else {
                         Toast.makeText(context, "Email and password cannot be empty", Toast.LENGTH_SHORT).show()
@@ -240,7 +211,7 @@ fun LoginScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
-                enabled = userStateValue != UserState.Loading || (!loginAttemptMade && !signUpAttemptMade)
+                enabled = userStateValue != UserState.Loading || !loginAttemptMade
             ) {
                 if (userStateValue == UserState.Loading && loginAttemptMade) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
@@ -252,18 +223,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             TextButton(onClick = {
-                if (email.isNotBlank() && password.isNotBlank()) {
-                    signUpAttemptMade = true
-                    loginAttemptMade = false
-                    viewModel.signUp(context, email, password)
-                } else {
-                    Toast.makeText(context, "Email and password cannot be empty for sign up", Toast.LENGTH_SHORT).show()
-                }
-                // onSignUpClick() // This lambda is now more for "what to do AFTER successful signup"
-                // or if you want to navigate to a separate fuller signup screen.
-                // For now, it's called from LaunchedEffect after successful registration.
-                // I will make the signup page tmr
-
+                // Just navigate to the SignUp screen, no sign-up logic here
+                onSignUpClick()
             }) {
                 Text("Sign Up")
             }
@@ -272,17 +233,17 @@ fun LoginScreen(
 
             when (userStateValue) {
                 is UserState.Loading -> {
-                    if (!loginAttemptMade && !signUpAttemptMade) {
+                    if (!loginAttemptMade) {
                         // CircularProgressIndicator() // Might be redundant because MainActivity shows one
                     }
                 }
                 is UserState.Error -> {
-                    if (!loginAttemptMade && !signUpAttemptMade) {
+                    if (!loginAttemptMade) {
                         Text(userStateValue.message, color = MaterialTheme.colorScheme.error)
                     }
                 }
                 is UserState.Success -> {
-                    if (!loginAttemptMade && !signUpAttemptMade &&
+                    if (!loginAttemptMade &&
                         userStateValue.message != "Logged in successfully!" &&
                         userStateValue.message != "Registered successfully!" &&
                         userStateValue.message != "User already logged in!" &&

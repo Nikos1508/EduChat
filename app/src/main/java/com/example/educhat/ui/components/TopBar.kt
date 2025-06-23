@@ -38,6 +38,7 @@ fun TopBar(
                 AppScreen.Chat -> Text(ChatName ?: "Group Chat")
                 AppScreen.Profile -> Text("EduChat")
                 AppScreen.Login -> { /* Empty For Now  */}
+                AppScreen.SignUp -> { /* Empty For Now */ }
             }
         },
         navigationIcon = {
@@ -49,6 +50,7 @@ fun TopBar(
                 }
                 AppScreen.Home -> {} // Or any other icon/action
                 AppScreen.Login -> {} // Decide if you need a navigation icon for Login
+                AppScreen.SignUp -> {}  // <-- Added SignUp
             }
         },
         actions = {
@@ -67,6 +69,7 @@ fun TopBar(
                 }
                 AppScreen.Profile -> {} // Or any other actions
                 AppScreen.Login -> {} // Decide if you need actions for Login
+                AppScreen.SignUp -> {}  // <-- Added SignUp
             }
         },
         modifier = Modifier.padding(2.dp)
