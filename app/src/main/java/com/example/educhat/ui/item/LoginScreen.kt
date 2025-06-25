@@ -60,7 +60,7 @@ fun LoginScreen(
         if (loginAttemptMade) {
             when (userStateValue) {
                 is UserState.Success -> {
-                    if (userStateValue.message == "Login Successful!") {
+                    if (userStateValue.message == "Logged in successfully!") {
                         Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
                         onLoginSuccess()
                     }

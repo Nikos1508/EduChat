@@ -128,8 +128,15 @@ fun EduChatApp() {
             composable(AppScreen.Profile.name) {
                 ProfileScreen(
                     modifier = Modifier
-                        .fillMaxSize() // Already applied by Scaffold's content area
-                        .padding(8.dp) // This is fine for additional content padding
+                        .fillMaxSize()
+                        .padding(8.dp),
+                    viewModel = viewModel,
+                    navController = navController,
+                    onLogoutComplete = {
+                        navController.navigate("login") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                    }
                 )
             }
             // Modified Chat route to accept an optional argument (example)

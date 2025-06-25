@@ -17,6 +17,14 @@ class SupabaseAuthViewModel : ViewModel() {
     private val _userState = mutableStateOf<UserState>(UserState.Loading)
     val userState: State<UserState> = _userState
 
+    private val _userEmail = mutableStateOf<String?>(null)
+    val userEmail: State<String?> = _userEmail
+
+    fun loadCurrentUserEmail() {
+        val user = client.auth.currentUserOrNull()
+        _userEmail.value = user?.email
+    }
+
     fun signUp(
         context: Context,
         userEmail: String,
@@ -32,6 +40,8 @@ class SupabaseAuthViewModel : ViewModel() {
                 }
 
                 saveToken(context)
+                loadCurrentUserEmail()
+
                 _userState.value = UserState.Success("Registered successfully!")
             } catch(e: Exception) {
                 _userState.value = UserState.Error(e.message ?: "")
@@ -73,7 +83,6 @@ class SupabaseAuthViewModel : ViewModel() {
             } catch (e: Exception) {
                 _userState.value = UserState.Error(e.message ?: "")
             }
-
         }
     }
 
@@ -102,10 +111,12 @@ class SupabaseAuthViewModel : ViewModel() {
                 val token = getToken(context)
                 if(token.isNullOrEmpty()) {
                     _userState.value = UserState.Success("User not logged in!")
+                    _userEmail.value = null     // clear email
                 } else {
                     client.auth.retrieveUser(token)
                     client.auth.refreshCurrentSession()
                     saveToken(context)
+                    loadCurrentUserEmail()
                     _userState.value = UserState.Success("User already logged in!")
                 }
             } catch (e: RestException) {

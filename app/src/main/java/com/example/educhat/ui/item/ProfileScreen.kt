@@ -1,5 +1,6 @@
 package com.example.educhat.ui.item
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,20 +24,34 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.educhat.R
-import com.example.educhat.ui.theme.EduChatTheme
+import com.example.educhat.SupabaseAuthViewModel
 
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
+fun ProfileScreen(
+    modifier: Modifier = Modifier,
+    viewModel: SupabaseAuthViewModel,
+    navController: androidx.navigation.NavController,
+    onLogoutComplete: () -> Unit
+) {
+    val context = LocalContext.current
+    val userEmail by viewModel.userEmail
+
+    LaunchedEffect(Unit) {
+        viewModel.loadCurrentUserEmail()
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -62,7 +77,7 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
         )
 
         Text(
-            text = "john.doe@example.com",
+            text = userEmail ?: "Unknown Email",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
@@ -70,23 +85,35 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(24.dp))
 
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
-        ProfileOptionItem(icon = Icons.Default.Person, text = "Account Info")
+        ProfileOptionItem(icon = Icons.Default.Person, text = "Account Info", onClick = { /* TODO */ })
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
-        ProfileOptionItem(icon = Icons.Default.Settings, text = "Settings")
+        ProfileOptionItem(icon = Icons.Default.Settings, text = "Settings", onClick = { /* TODO */ })
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
-        ProfileOptionItem(icon = Icons.Default.Notifications, text = "Notifications")
+        ProfileOptionItem(icon = Icons.Default.Notifications, text = "Notifications", onClick = { /* TODO */ })
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
-        ProfileOptionItem(icon = Icons.AutoMirrored.Filled.ExitToApp, text = "Log Out")
+        ProfileOptionItem(
+            icon = Icons.AutoMirrored.Filled.ExitToApp,
+            text = "Log Out",
+            onClick = {
+                viewModel.logout(context)
+                Toast.makeText(context, "Logged out", Toast.LENGTH_SHORT).show()
+                onLogoutComplete()
+            }
+        )
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
     }
 }
 
 @Composable
-fun ProfileOptionItem(icon: ImageVector, text: String) {
+fun ProfileOptionItem(
+    icon: ImageVector,
+    text: String,
+    onClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* TO DO */ }
+            .clickable { onClick() }
             .padding(vertical = 12.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -101,21 +128,5 @@ fun ProfileOptionItem(icon: ImageVector, text: String) {
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileScreenPreviewLight() {
-    EduChatTheme {
-        ProfileScreen(modifier = Modifier.padding(4.dp))
-    }
-}
-
-@Preview
-@Composable
-fun ProfileScreenPreviewDark() {
-    EduChatTheme(darkTheme = true) {
-        ProfileScreen(modifier = Modifier.padding(4.dp))
     }
 }
