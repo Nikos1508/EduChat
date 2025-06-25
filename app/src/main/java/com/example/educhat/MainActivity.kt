@@ -18,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.educhat.data.model.UserState
 import com.example.educhat.ui.components.TopBar
 import com.example.educhat.ui.item.ChatScreen
 import com.example.educhat.ui.item.HomeScreen
@@ -49,28 +50,49 @@ enum class AppScreen {
 @Composable
 fun EduChatApp() {
     val navController = rememberNavController()
-    val viewModel: SupabaseAuthViewModel = viewModel() // Assuming this ViewModel exists and is set up
-    val context = LocalContext.current // Keep if needed by ViewModel
+    val viewModel: SupabaseAuthViewModel = viewModel()
+    val context = LocalContext.current
 
-    // Get current back stack entry
+    val userState by viewModel.userState
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    // Determine current screen based on the route
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Convert currentRoute (String?) to AppScreen enum
     val currentScreen = remember(currentRoute) {
         currentRoute?.let { routeName ->
             try {
                 AppScreen.valueOf(routeName)
             } catch (e: IllegalArgumentException) {
-                null // Or a default screen, or handle error
+                null
             }
         }
     }
 
 
-    LaunchedEffect(Unit) { // This seems fine for one-time effects like checking login
-        viewModel.isUserLoggedIn(context)
+    LaunchedEffect(Unit) {
+        viewModel.isUserLoggedIn(context) // Optional: validate session
+    }
+
+    LaunchedEffect(userState) {
+        when (userState) {
+            is UserState.Error -> {
+                val message = (userState as UserState.Error).message
+                if (message.contains("Session expired", ignoreCase = true)) {
+                    navController.navigate(AppScreen.Login.name) {
+                        popUpTo(AppScreen.Home.name) { inclusive = true }
+                    }
+                }
+            }
+            is UserState.Success -> {
+                val message = (userState as UserState.Success).message
+                if (message == "User already logged in!") {
+                    navController.navigate(AppScreen.Home.name) {
+                        popUpTo(AppScreen.Login.name) { inclusive = true }
+                    }
+                }
+            }
+            else -> {}
+        }
     }
 
     Scaffold(
@@ -131,10 +153,10 @@ fun EduChatApp() {
                         .fillMaxSize()
                         .padding(8.dp),
                     viewModel = viewModel,
-                    navController = navController,
+                    navController = navController,  // <-- Add this line
                     onLogoutComplete = {
-                        navController.navigate("login") {
-                            popUpTo("home") { inclusive = true }
+                        navController.navigate(AppScreen.Login.name) {
+                            popUpTo(AppScreen.Home.name) { inclusive = true }
                         }
                     }
                 )

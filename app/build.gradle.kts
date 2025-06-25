@@ -107,8 +107,13 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
 
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+
     // Networking (Ktor)
     implementation("io.ktor:ktor-client-cio:3.1.3")
+
+    // Image loading for Jetpack Compose
+    implementation("io.coil-kt:coil-compose:2.2.2")
 
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
