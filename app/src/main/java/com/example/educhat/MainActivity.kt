@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             EduChatTheme {
-                ProgramScreen()
+                EduChatApp()
             }
         }
     }
@@ -45,7 +45,8 @@ enum class AppScreen {
     SignUp,
     Home,
     Profile,
-    Chat
+    Chat,
+    Program
 }
 
 @Composable
@@ -71,7 +72,7 @@ fun EduChatApp() {
 
 
     LaunchedEffect(Unit) {
-        viewModel.isUserLoggedIn(context) // Optional: validate session
+        viewModel.isUserLoggedIn(context)
     }
 
     LaunchedEffect(userState) {
@@ -104,7 +105,6 @@ fun EduChatApp() {
                     currentScreen = currentScreen,
                     onNavigate = { screen -> navController.navigate(screen.name) },
                     onBack = { navController.popBackStack() }
-                    // ChatName = if (currentScreen == AppScreen.Chat) "Some Chat Name" else null // Optional
                 )
             }
         }
@@ -112,7 +112,7 @@ fun EduChatApp() {
         NavHost(
             navController = navController,
             startDestination = AppScreen.Login.name,
-            modifier = Modifier.padding(innerPadding) // Apply padding from Scaffold
+            modifier = Modifier.padding(innerPadding)
         ) {
             composable(AppScreen.Login.name) {
                 LoginScreen(
@@ -129,7 +129,7 @@ fun EduChatApp() {
             }
             composable(AppScreen.SignUp.name) {
                 SignUpScreen(
-                    viewModel = viewModel, // pass your shared ViewModel if needed
+                    viewModel = viewModel,
                     onSignUpComplete = {
                         navController.navigate(AppScreen.Login.name) {
                             popUpTo(AppScreen.SignUp.name) { inclusive = true }
@@ -154,7 +154,7 @@ fun EduChatApp() {
                         .fillMaxSize()
                         .padding(8.dp),
                     viewModel = viewModel,
-                    navController = navController,  // <-- Add this line
+                    navController = navController,
                     onLogoutComplete = {
                         navController.navigate(AppScreen.Login.name) {
                             popUpTo(AppScreen.Home.name) { inclusive = true }
@@ -162,7 +162,6 @@ fun EduChatApp() {
                     }
                 )
             }
-            // Modified Chat route to accept an optional argument (example)
             composable(AppScreen.Chat.name + "/{groupName}") { backStackEntry ->
                 val groupName = backStackEntry.arguments?.getString("groupName")
                 ChatScreen(
@@ -171,13 +170,15 @@ fun EduChatApp() {
                         .padding(8.dp)
                 )
             }
-            // Fallback Chat route if no groupName is provided (optional)
             composable(AppScreen.Chat.name) {
                 ChatScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(8.dp)
                 )
+            }
+            composable(AppScreen.Program.name) {
+                ProgramScreen()
             }
         }
     }

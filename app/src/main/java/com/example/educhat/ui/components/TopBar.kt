@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,23 +40,25 @@ fun TopBar(
                 AppScreen.Profile -> Text("EduChat")
                 AppScreen.Login -> { /* Empty For Now  */}
                 AppScreen.SignUp -> { /* Empty For Now */ }
+                AppScreen.Program -> Text("EduChat")
             }
         },
         navigationIcon = {
             when (currentScreen) {
-                AppScreen.Profile, AppScreen.Chat -> {
+                AppScreen.Profile, AppScreen.Chat, AppScreen.Program -> {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
-                AppScreen.Home -> {} // Or any other icon/action
-                AppScreen.Login -> {} // Decide if you need a navigation icon for Login
-                AppScreen.SignUp -> {}  // <-- Added SignUp
+                AppScreen.Home -> {}
+                AppScreen.Login -> {}
+                AppScreen.SignUp -> {}
             }
         },
         actions = {
             when (currentScreen) {
-                AppScreen.Home, AppScreen.Chat -> {
+                AppScreen.Home, AppScreen.Chat, AppScreen.Program -> {
+                    // Profile icon
                     IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
                         Image(
                             painter = profileImage,
@@ -66,14 +69,45 @@ fun TopBar(
                                 .clip(MaterialTheme.shapes.extraLarge)
                         )
                     }
+                    // Programs icon button
+                    IconButton(onClick = { onNavigate(AppScreen.Program) }) {
+                        Icon(
+                            imageVector = Icons.Filled.List,
+                            contentDescription = "Programs"
+                        )
+                    }
                 }
-                AppScreen.Profile -> {} // Or any other actions
-                AppScreen.Login -> {} // Decide if you need actions for Login
-                AppScreen.SignUp -> {}  // <-- Added SignUp
+                AppScreen.Profile -> {}
+                AppScreen.Login -> {}
+                AppScreen.SignUp -> {}
             }
         },
         modifier = Modifier.padding(2.dp)
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TopBarPreviewLogin() {
+    EduChatTheme {
+        TopBar(
+            currentScreen = AppScreen.Login,
+            onNavigate = {},
+            onBack = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TopBarPreviewSignUp() {
+    EduChatTheme {
+        TopBar(
+            currentScreen = AppScreen.SignUp,
+            onNavigate = {},
+            onBack = {}
+        )
+    }
 }
 
 @Preview(showBackground = true)
@@ -83,7 +117,7 @@ fun TopBarPreviewHome() {
         TopBar(
             currentScreen = AppScreen.Home,
             onNavigate = {},
-            onBack = {}  // add this
+            onBack = {}
         )
     }
 }
@@ -95,7 +129,7 @@ fun TopBarPreviewChat() {
         TopBar(
             currentScreen = AppScreen.Chat,
             onNavigate = {},
-            onBack = {},  // add this
+            onBack = {},
             ChatName = "Math Study Group"
         )
     }
@@ -108,7 +142,19 @@ fun TopBarPreviewProfile() {
         TopBar(
             currentScreen = AppScreen.Profile,
             onNavigate = {},
-            onBack = {}  // add this
+            onBack = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TopBarPreviewProgram() {
+    EduChatTheme {
+        TopBar(
+            currentScreen = AppScreen.Program,
+            onNavigate = {},
+            onBack = {}
         )
     }
 }
