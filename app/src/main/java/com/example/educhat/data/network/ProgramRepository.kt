@@ -8,12 +8,16 @@ object ProgramRepository {
 
     suspend fun getPrograms(): List<Program> {
         return try {
-            client
+            val result = client
                 .postgrest
                 .from("programs")
                 .select()
                 .decodeList<Program>()
+
+            println("Fetched programs: $result")
+            result
         } catch (e: Exception) {
+            e.printStackTrace()
             throw RuntimeException("Failed to fetch programs: ${e.message}")
         }
     }
