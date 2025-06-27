@@ -1,8 +1,13 @@
 package com.example.educhat.ui.item
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -23,7 +28,7 @@ import io.github.jan.supabase.postgrest.from
 
 @Composable
 fun ProgramScreen() {
-    var program by remember { mutableStateOf<Program?>(null) }
+    var allPrograms by remember { mutableStateOf<List<Program>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -33,7 +38,8 @@ fun ProgramScreen() {
                 .select()
                 .decodeList<Program>()
 
-            program = programs.firstOrNull { it.id == 1}
+            val sortedPrograms = programs.sortedBy { it.hour } // Sort by hour
+            allPrograms = sortedPrograms
         } catch (e: Exception) {
             errorMessage = e.message ?: "Unknown error"
         } finally {
@@ -47,34 +53,76 @@ fun ProgramScreen() {
                 CircularProgressIndicator()
             }
         }
+
         errorMessage != null -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = "Error: $errorMessage", color = MaterialTheme.colorScheme.error)
             }
         }
-        program != null -> {
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                Text("Monday: ${program!!.monday}")
-                Text("Tuesday: ${program!!.tuesday}")
-                Text("Wednesday: ${program!!.wednesday}")
-                Text("Thursday: ${program!!.thursday}")
-                Text("Friday: ${program!!.friday}")
-                Text("Grade: ${program!!.grade}")
-                Text("Hour: ${program!!.hour}")
-                Text("Class: ${program!!.`class`}")
-            }
-        }
+
         else -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No program found")
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)) {
+                for (grade in 1..3) {
+                    for (classNum in 1..5) {
+                        val filtered = allPrograms.filter {
+                            it.grade == grade && it.`class` == classNum
+                        }.sortedBy { it.hour }
+
+                        if (filtered.isNotEmpty()) {
+                            ProgramTable(filtered, grade, classNum)
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                }
             }
         }
     }
 }
+
+@Composable
+fun ProgramTable(programs: List<Program>, grade: Int, classNum: Int) {
+    Column {
+        Text(
+            text = "Grade $grade, Class $classNum",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        RowHeader()
+
+        programs.forEach { program ->
+            RowSchedule(program)
+        }
+    }
+}
+
+@Composable
+fun RowHeader() {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        listOf("Hour", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday").forEach {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+fun RowSchedule(program: Program) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(text = program.hour.toString(), modifier = Modifier.weight(1f))
+        Text(text = program.monday, modifier = Modifier.weight(1f))
+        Text(text = program.tuesday, modifier = Modifier.weight(1f))
+        Text(text = program.wednesday, modifier = Modifier.weight(1f))
+        Text(text = program.thursday, modifier = Modifier.weight(1f))
+        Text(text = program.friday, modifier = Modifier.weight(1f))
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
