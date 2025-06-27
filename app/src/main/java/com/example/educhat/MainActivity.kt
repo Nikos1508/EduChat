@@ -24,6 +24,7 @@ import com.example.educhat.ui.item.ChatScreen
 import com.example.educhat.ui.item.HomeScreen
 import com.example.educhat.ui.item.LoginScreen
 import com.example.educhat.ui.item.ProfileScreen
+import com.example.educhat.ui.item.ProgramScreen
 import com.example.educhat.ui.item.SignUpScreen
 import com.example.educhat.ui.theme.EduChatTheme
 
@@ -33,7 +34,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             EduChatTheme {
-                EduChatApp()
+                ProgramScreen()
             }
         }
     }
