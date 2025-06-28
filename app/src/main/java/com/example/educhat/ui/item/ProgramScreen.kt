@@ -1,15 +1,24 @@
 package com.example.educhat.ui.item
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.educhat.data.model.Program
@@ -38,8 +48,7 @@ fun ProgramScreen() {
                 .select()
                 .decodeList<Program>()
 
-            val sortedPrograms = programs.sortedBy { it.hour } // Sort by hour
-            allPrograms = sortedPrograms
+            allPrograms = programs.sortedBy { it.hour }
         } catch (e: Exception) {
             errorMessage = e.message ?: "Unknown error"
         } finally {
@@ -47,32 +56,38 @@ fun ProgramScreen() {
         }
     }
 
-    when {
-        isLoading -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            isLoading -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
-        }
 
-        errorMessage != null -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Error: $errorMessage", color = MaterialTheme.colorScheme.error)
+            errorMessage != null -> {
+                Text(
+                    text = "Error: $errorMessage",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
-        }
 
-        else -> {
-            Column(modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)) {
-                for (grade in 1..3) {
-                    for (classNum in 1..5) {
-                        val filtered = allPrograms.filter {
-                            it.grade == grade && it.`class` == classNum
-                        }.sortedBy { it.hour }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    for (grade in 1..3) {
+                        for (classNum in 1..5) {
+                            val filtered = allPrograms.filter {
+                                it.grade == grade && it.`class` == classNum
+                            }.sortedBy { it.hour }
 
-                        if (filtered.isNotEmpty()) {
-                            ProgramTable(filtered, grade, classNum)
-                            Spacer(modifier = Modifier.height(16.dp))
+                            if (filtered.isNotEmpty()) {
+                                item {
+                                    ProgramTable(filtered, grade, classNum)
+                                }
+                            }
                         }
                     }
                 }
@@ -83,46 +98,141 @@ fun ProgramScreen() {
 
 @Composable
 fun ProgramTable(programs: List<Program>, grade: Int, classNum: Int) {
-    Column {
-        Text(
-            text = "Grade $grade, Class $classNum",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+    val colors = listOf(
+        MaterialTheme.colorScheme.primaryContainer,
+        MaterialTheme.colorScheme.secondaryContainer,
+        MaterialTheme.colorScheme.tertiaryContainer
+    )
+    val backgroundColor = colors[(grade * 5 + classNum) % colors.size]
 
-        RowHeader()
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.medium),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+               Text(
+                text = "Grade $grade - Class $classNum",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
 
-        programs.forEach { program ->
-            RowSchedule(program)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TableWrapper {
+                RowHeader()
+                HorizontalDivider(
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                )
+
+                programs.forEachIndexed { index, program ->
+                    RowSchedule(program)
+                    if (index != programs.lastIndex) {
+                        HorizontalDivider(thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TableWrapper(content: @Composable ColumnScope.() -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = MaterialTheme.shapes.small
+            )
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            content()
         }
     }
 }
 
 @Composable
 fun RowHeader() {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        listOf("Hour", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday").forEach {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.weight(1f)
-            )
+    Row(Modifier.fillMaxWidth()) {
+        listOf("Mon", "Tue", "Wed", "Thu", "Fri").forEachIndexed { index, day ->
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = day,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (index < 4) {
+                VerticalDivider()
+            }
         }
     }
 }
 
 @Composable
 fun RowSchedule(program: Program) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = program.hour.toString(), modifier = Modifier.weight(1f))
-        Text(text = program.monday, modifier = Modifier.weight(1f))
-        Text(text = program.tuesday, modifier = Modifier.weight(1f))
-        Text(text = program.wednesday, modifier = Modifier.weight(1f))
-        Text(text = program.thursday, modifier = Modifier.weight(1f))
-        Text(text = program.friday, modifier = Modifier.weight(1f))
+    Row(Modifier.fillMaxWidth()) {
+        listOf(
+            program.monday,
+            program.tuesday,
+            program.wednesday,
+            program.thursday,
+            program.friday
+        ).forEachIndexed { index, subject ->
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = subject,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            if (index < 4) {
+                VerticalDivider()
+            }
+        }
     }
 }
 
+@Composable
+fun VerticalDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(1.dp)
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+    )
+}
+
+@Composable
+fun getCardColor(grade: Int, classNum: Int): Color {
+    val colors = listOf(
+        MaterialTheme.colorScheme.surfaceVariant,
+        MaterialTheme.colorScheme.primaryContainer,
+        MaterialTheme.colorScheme.secondaryContainer,
+        MaterialTheme.colorScheme.tertiaryContainer
+    )
+    val index = (grade * 5 + classNum) % colors.size
+    return colors[index]
+}
 
 @Preview(showBackground = true)
 @Composable
