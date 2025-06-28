@@ -21,4 +21,16 @@ object ProgramRepository {
             throw RuntimeException("Failed to fetch programs: ${e.message}")
         }
     }
+    suspend fun addProgram(program: Program) {
+        try {
+            client
+                .postgrest
+                .from("programs")
+                .insert(program)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw RuntimeException("Failed to insert program: ${e.message}")
+        }
+    }
+
 }

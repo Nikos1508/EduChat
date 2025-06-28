@@ -25,4 +25,15 @@ class ProgramViewModel : ViewModel() {
             }
         }
     }
+
+    fun addProgram(program: Program) {
+        viewModelScope.launch {
+            try {
+                ProgramRepository.addProgram(program)
+                loadPrograms() // refresh
+            } catch (e: Exception) {
+                // handle or log error
+            }
+        }
+    }
 }

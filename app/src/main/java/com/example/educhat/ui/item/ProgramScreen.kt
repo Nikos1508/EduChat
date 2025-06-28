@@ -29,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.educhat.data.model.Program
@@ -220,18 +219,6 @@ fun VerticalDivider() {
             .width(1.dp)
             .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
     )
-}
-
-@Composable
-fun getCardColor(grade: Int, classNum: Int): Color {
-    val colors = listOf(
-        MaterialTheme.colorScheme.surfaceVariant,
-        MaterialTheme.colorScheme.primaryContainer,
-        MaterialTheme.colorScheme.secondaryContainer,
-        MaterialTheme.colorScheme.tertiaryContainer
-    )
-    val index = (grade * 5 + classNum) % colors.size
-    return colors[index]
 }
 
 @Preview(showBackground = true)
