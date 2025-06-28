@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,27 +39,25 @@ fun TopBar(
                 AppScreen.Home -> Text("EduChat")
                 AppScreen.Chat -> Text(ChatName ?: "Group Chat")
                 AppScreen.Profile -> Text("EduChat")
-                AppScreen.Login -> { /* Empty For Now  */}
-                AppScreen.SignUp -> { /* Empty For Now */ }
                 AppScreen.Program -> Text("EduChat")
-            }
-        },
-        navigationIcon = {
-            when (currentScreen) {
-                AppScreen.Profile, AppScreen.Chat, AppScreen.Program -> {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-                AppScreen.Home -> {}
+                AppScreen.ProgramEdit -> Text("Edit Program")
                 AppScreen.Login -> {}
                 AppScreen.SignUp -> {}
             }
         },
+        navigationIcon = {
+            when (currentScreen) {
+                AppScreen.Profile, AppScreen.Chat, AppScreen.Program, AppScreen.ProgramEdit -> {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+                AppScreen.Home, AppScreen.Login, AppScreen.SignUp -> {}
+            }
+        },
         actions = {
             when (currentScreen) {
-                AppScreen.Home, AppScreen.Chat, AppScreen.Program -> {
-                    // Profile icon
+                AppScreen.Home, AppScreen.Chat, AppScreen.Program, AppScreen.ProgramEdit -> {
                     IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
                         Image(
                             painter = profileImage,
@@ -69,17 +68,28 @@ fun TopBar(
                                 .clip(MaterialTheme.shapes.extraLarge)
                         )
                     }
-                    // Programs icon button
-                    IconButton(onClick = { onNavigate(AppScreen.Program) }) {
-                        Icon(
-                            imageVector = Icons.Filled.List,
-                            contentDescription = "Programs"
-                        )
+
+                    val excludedScreens = listOf(AppScreen.Program, AppScreen.ProgramEdit)
+
+                    if (currentScreen !in excludedScreens) {
+                        IconButton(onClick = { onNavigate(AppScreen.Program) }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.List,
+                                contentDescription = "Programs"
+                            )
+                        }
+                    }
+
+                    if (currentScreen == AppScreen.Program) {
+                        IconButton(onClick = { onNavigate(AppScreen.ProgramEdit) }) {
+                            Icon(
+                                imageVector = Icons.Filled.AddCircle,
+                                contentDescription = "Edit Program"
+                            )
+                        }
                     }
                 }
-                AppScreen.Profile -> {}
-                AppScreen.Login -> {}
-                AppScreen.SignUp -> {}
+                AppScreen.Profile, AppScreen.Login, AppScreen.SignUp -> {}
             }
         },
         modifier = Modifier.padding(2.dp)
@@ -153,6 +163,18 @@ fun TopBarPreviewProgram() {
     EduChatTheme {
         TopBar(
             currentScreen = AppScreen.Program,
+            onNavigate = {},
+            onBack = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TopBarPreviewProgramEdit() {
+    EduChatTheme {
+        TopBar(
+            currentScreen = AppScreen.ProgramEdit,
             onNavigate = {},
             onBack = {}
         )

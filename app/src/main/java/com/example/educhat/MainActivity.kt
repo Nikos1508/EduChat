@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             EduChatTheme {
-                ProgramEditScreen()
+                EduChatApp()
             }
         }
     }
@@ -47,13 +47,16 @@ enum class AppScreen {
     Home,
     Profile,
     Chat,
-    Program
+    Program,
+    ProgramEdit
 }
 
 @Composable
 fun EduChatApp() {
     val navController = rememberNavController()
     val viewModel: SupabaseAuthViewModel = viewModel()
+    val programViewModel: ProgramViewModel = viewModel()
+
     val context = LocalContext.current
 
     val userState by viewModel.userState
@@ -180,6 +183,12 @@ fun EduChatApp() {
             }
             composable(AppScreen.Program.name) {
                 ProgramScreen()
+            }
+            composable(AppScreen.ProgramEdit.name) {
+                ProgramEditScreen(
+                    navController = navController,
+                    viewModel = programViewModel
+                )
             }
         }
     }
