@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.educhat.data.model.CalendarEvent
+import com.example.educhat.data.network.CalendarRepository
 import com.example.educhat.ui.theme.EduChatTheme
 import org.threeten.bp.DayOfWeek
 import org.threeten.bp.LocalDate
@@ -57,6 +60,15 @@ fun CalendarScreen() {
 
     val daysOfWeek = DayOfWeek.values().map {
         it.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+    }
+
+    val events = remember { mutableStateOf<List<CalendarEvent>>(emptyList()) }
+
+    LaunchedEffect(selectedDate) {
+        events.value = CalendarRepository.getEventsForMonth(
+            selectedDate.year,
+            selectedDate.monthValue
+        )
     }
 
     Column(
@@ -118,7 +130,16 @@ fun CalendarScreen() {
                         && selectedDate.month == LocalDate.now().month
                         && selectedDate.year == LocalDate.now().year
 
-                val eventCountForDay = if (day == "12") 1 else 0
+                val dayInt = day.toIntOrNull()
+
+                val eventCountForDay = dayInt?.let { d ->
+                    events.value.count { event ->
+                        val eventDate = LocalDate.parse(event.date)
+                        eventDate.year == selectedDate.year &&
+                                eventDate.month == selectedDate.month &&
+                                eventDate.dayOfMonth == d
+                    }
+                } ?: 0
 
                 Box(
                     modifier = Modifier
@@ -129,6 +150,7 @@ fun CalendarScreen() {
                         )
                         .clip(RoundedCornerShape(8.dp))
                         .clickable(enabled = day.isNotEmpty()) {
+                            /* TO DO */
                         }
                         .padding(4.dp),
                     contentAlignment = Alignment.Center

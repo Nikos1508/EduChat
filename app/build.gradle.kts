@@ -120,4 +120,5 @@ dependencies {
 
     //For the calendar
     implementation("com.jakewharton.threetenabp:threetenabp:1.4.5")
+    implementation("org.threeten:threetenbp:1.6.6:no-tzdb")
 }
