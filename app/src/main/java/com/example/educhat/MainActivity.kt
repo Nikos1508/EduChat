@@ -20,6 +20,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.educhat.data.model.UserState
 import com.example.educhat.ui.components.TopBar
+import com.example.educhat.ui.item.CalendarScreen
 import com.example.educhat.ui.item.ChatScreen
 import com.example.educhat.ui.item.HomeScreen
 import com.example.educhat.ui.item.LoginScreen
@@ -51,7 +52,8 @@ enum class AppScreen {
     Profile,
     Chat,
     Program,
-    ProgramEdit
+    ProgramEdit,
+    Calendar
 }
 
 @Composable
@@ -192,6 +194,9 @@ fun EduChatApp() {
                     navController = navController,
                     viewModel = programViewModel
                 )
+            }
+            composable(AppScreen.Calendar.name) {
+                CalendarScreen()
             }
         }
     }
