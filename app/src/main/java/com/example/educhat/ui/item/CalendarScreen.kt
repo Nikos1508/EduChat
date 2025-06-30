@@ -1,6 +1,5 @@
 package com.example.educhat.ui.item
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,12 +21,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,29 +42,21 @@ import java.util.Locale
 
 @Composable
 fun CalendarScreen() {
-    val today = remember { LocalDate.now() }
-    val firstDayOfMonth = remember { today.withDayOfMonth(1) }
-    val daysInMonth = remember { today.lengthOfMonth() }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
-    val startDayOfWeek = remember {
-        (firstDayOfMonth.dayOfWeek.value % 7)
+    val firstDayOfMonth = selectedDate.withDayOfMonth(1)
+    val daysInMonth = selectedDate.lengthOfMonth()
+    val startDayOfWeek = (firstDayOfMonth.dayOfWeek.value % 7)
+
+    val totalBoxes = ((startDayOfWeek + daysInMonth + 6) / 7) * 7
+
+    val dayNumbers = List(totalBoxes) { index ->
+        val day = index - startDayOfWeek + 1
+        if (day in 1..daysInMonth) day.toString() else ""
     }
 
-    val totalBoxes = remember {
-        ((startDayOfWeek + daysInMonth + 6) / 7) * 7
-    }
-
-    val dayNumbers = remember {
-        List(totalBoxes) { index ->
-            val day = index - startDayOfWeek + 1
-            if (day in 1..daysInMonth) day.toString() else ""
-        }
-    }
-
-    val daysOfWeek = remember {
-        DayOfWeek.values().map {
-            it.getDisplayName(TextStyle.SHORT, Locale.getDefault())
-        }
+    val daysOfWeek = DayOfWeek.values().map {
+        it.getDisplayName(TextStyle.SHORT, Locale.getDefault())
     }
 
     Column(
@@ -69,12 +64,31 @@ fun CalendarScreen() {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "${today.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${today.year}",
-            fontSize = 24.sp,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = {
+                selectedDate = selectedDate.minusMonths(1)
+            }) {
+                Text("< Prev")
+            }
+
+            Text(
+                text = "${selectedDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${selectedDate.year}",
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            TextButton(onClick = {
+                selectedDate = selectedDate.plusMonths(1)
+            }) {
+                Text("Next >")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         Row(modifier = Modifier.fillMaxWidth()) {
             daysOfWeek.forEach { day ->
@@ -84,7 +98,8 @@ fun CalendarScreen() {
                         .weight(1f)
                         .padding(4.dp),
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -99,15 +114,11 @@ fun CalendarScreen() {
             userScrollEnabled = false
         ) {
             itemsIndexed(dayNumbers) { index, day ->
-                val isToday = day == today.dayOfMonth.toString()
+                val isToday = day == LocalDate.now().dayOfMonth.toString()
+                        && selectedDate.month == LocalDate.now().month
+                        && selectedDate.year == LocalDate.now().year
 
-                val dayOfWeekIndex = (startDayOfWeek + index) % 7
-
-                val isWeekend = dayOfWeekIndex == 0 || dayOfWeekIndex == 6
-
-                val context = LocalContext.current
-
-                val eventCountForDay = 1
+                val eventCountForDay = if (day == "12") 1 else 0
 
                 Box(
                     modifier = Modifier
@@ -117,10 +128,9 @@ fun CalendarScreen() {
                             else MaterialTheme.colorScheme.surface
                         )
                         .clip(RoundedCornerShape(8.dp))
-                        .padding(4.dp)
                         .clickable(enabled = day.isNotEmpty()) {
-                            Toast.makeText(context, "Clicked on day $day", Toast.LENGTH_SHORT).show()
-                        },
+                        }
+                        .padding(4.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -129,27 +139,25 @@ fun CalendarScreen() {
                     ) {
                         Text(
                             text = day,
-                            color = when {
-                                isToday -> MaterialTheme.colorScheme.onPrimary
-                                isWeekend -> MaterialTheme.colorScheme.onSurfaceVariant // dimmer text for weekends
-                                else -> MaterialTheme.colorScheme.onSurface
-                            }
+                            color = if (isToday) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            // for each event for this day, show a dot (e.g., colored circle)
-                            // example: show 2 dots for 2 events:
-                            repeat(eventCountForDay) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
-                                        .padding(1.dp)
-                                )
-                                Spacer(modifier = Modifier.width(2.dp))
+                        if (eventCountForDay > 0) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                repeat(eventCountForDay) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(6.dp)
+                                            .background(
+                                                color = MaterialTheme.colorScheme.primary,
+                                                shape = CircleShape
+                                            )
+                                    )
+                                    Spacer(modifier = Modifier.width(2.dp))
+                                }
                             }
                         }
                     }
