@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +65,8 @@ fun CalendarScreen() {
     }
 
     val events = remember { mutableStateOf<List<CalendarEvent>>(emptyList()) }
+
+    var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
 
     LaunchedEffect(selectedDate) {
         events.value = CalendarRepository.getEventsForMonth(
@@ -118,9 +122,12 @@ fun CalendarScreen() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Calendar Grid
         LazyVerticalGrid(
             columns = GridCells.Fixed(7),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             userScrollEnabled = false
@@ -141,20 +148,25 @@ fun CalendarScreen() {
                     }
                 } ?: 0
 
+                val thisDay = dayInt?.let {
+                    selectedDate.withDayOfMonth(it)
+                }
+                val isSelected = thisDay == selectedDay
+
                 Box(
                     modifier = Modifier
                         .aspectRatio(1f)
                         .background(
-                            if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                            else MaterialTheme.colorScheme.surface
+                            when {
+                                isSelected -> MaterialTheme.colorScheme.secondary
+                                isToday -> MaterialTheme.colorScheme.primary
+                                else -> MaterialTheme.colorScheme.surface
+                            }
                         )
-                        .clip(RoundedCornerShape(8.dp))
                         .clickable(enabled = day.isNotEmpty()) {
-                            /* TO DO */
+                            thisDay?.let { selectedDay = it }
                         }
-                        .padding(4.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                ){
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -186,8 +198,84 @@ fun CalendarScreen() {
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Upcoming Events",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
+        if (events.value.isEmpty()) {
+            Text(
+                text = "No events this month.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+            )
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                val filteredEvents = selectedDay?.let { selected ->
+                    events.value.filter { LocalDate.parse(it.date) == selected }
+                } ?: events.value
+
+                if (filteredEvents.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No events on ${selectedDay?.toString() ?: "this month"}",
+                            modifier = Modifier.padding(8.dp),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                } else {
+                    // This requires correct import of `items` from `foundation.lazy`
+                    items(filteredEvents) { event ->
+                        EventItem(event = event)
+                    }
+                }
+            }
+        }
     }
 }
+
+@Composable
+fun EventItem(event: CalendarEvent) {
+    val date = LocalDate.parse(event.date)
+    val formattedDate = date.format(org.threeten.bp.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(12.dp)
+    ) {
+        Text(
+            text = event.event,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = event.description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = formattedDate,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
