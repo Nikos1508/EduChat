@@ -113,8 +113,11 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:3.1.3")
 
     // Image loading for Jetpack Compose
-    implementation("io.coil-kt:coil-compose:2.2.2")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
+
+    //For the calendar
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.5")
 }

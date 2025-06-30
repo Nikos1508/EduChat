@@ -28,10 +28,13 @@ import com.example.educhat.ui.item.ProgramEditScreen
 import com.example.educhat.ui.item.ProgramScreen
 import com.example.educhat.ui.item.SignUpScreen
 import com.example.educhat.ui.theme.EduChatTheme
+import com.jakewharton.threetenabp.AndroidThreeTen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        AndroidThreeTen.init(this)
 
         setContent {
             EduChatTheme {
