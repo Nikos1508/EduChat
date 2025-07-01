@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.educhat.data.model.CalendarEvent
+import com.example.educhat.data.model.CalendarEventType
 import com.example.educhat.data.network.CalendarRepository
 import com.example.educhat.ui.theme.EduChatTheme
 import org.threeten.bp.DayOfWeek
@@ -70,15 +71,20 @@ fun CalendarScreen() {
     var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
     var searchQuery by remember { mutableStateOf("") }
 
-    val categories = listOf("All", "Meeting", "Exam", "Personal")
-    var selectedCategory by remember { mutableStateOf("All") }
+    var selectedCategory by remember { mutableStateOf<CalendarEventType?>(null) }
 
-    fun getCategoryColor(category: String): Color {
-        return when (category.lowercase()) {
-            "meeting" -> Color(0xFF4CAF50)    // Green
-            "exam" -> Color(0xFFF44336)       // Red
-            "personal" -> Color(0xFF2196F3)   // Blue
-            else -> Color(0xFF9E9E9E)         // Gray
+    val categories = listOf<CalendarEventType?>(null) + CalendarEventType.values().toList()
+
+    fun getCategoryLabel(type: CalendarEventType?): String {
+        return type?.displayName ?: "All"
+    }
+
+    fun getCategoryColor(category: CalendarEventType?): Color {
+        return when (category) {
+            CalendarEventType.Meeting -> Color(0xFF4CAF50)    // green
+            CalendarEventType.Exam -> Color(0xFFF44336)       // red
+            CalendarEventType.Personal -> Color(0xFF2196F3)   // blue
+            null -> Color.Gray                                 // fallback color
         }
     }
 
@@ -160,12 +166,11 @@ fun CalendarScreen() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // --- Calendar Grid ---
         LazyVerticalGrid(
             columns = GridCells.Fixed(7),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp), // fixed height so search bar doesn't get overlapped
+                .height(100.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             userScrollEnabled = false
@@ -234,7 +239,7 @@ fun CalendarScreen() {
                                         modifier = Modifier
                                             .size(6.dp)
                                             .background(
-                                                color = getCategoryColor(event.type ?: "all"),
+                                                color = getCategoryColor(event.type),
                                                 shape = CircleShape
                                             )
                                     )
@@ -292,7 +297,7 @@ fun CalendarScreen() {
             val matchesDate = selectedDay == null || eventDate == selectedDay
             val matchesSearch = event.event.contains(searchQuery, ignoreCase = true) ||
                     event.description.contains(searchQuery, ignoreCase = true)
-            val matchesCategory = selectedCategory == "All" || event.type.equals(selectedCategory, ignoreCase = true)
+            val matchesCategory = (selectedCategory == null) || (event.type == selectedCategory)
             matchesDate && matchesSearch && matchesCategory
         }
 

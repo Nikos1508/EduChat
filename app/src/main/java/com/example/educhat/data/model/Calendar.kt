@@ -8,5 +8,5 @@ data class CalendarEvent(
     val event: String,
     val description: String,
     val date: String,
-    val type: String? = null
+    val type: CalendarEventType? = null
 )
