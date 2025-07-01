@@ -1,5 +1,6 @@
 package com.example.educhat.ui.item
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,10 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -172,6 +178,28 @@ fun CalendarScreen() {
         ) {
             itemsIndexed(dayNumbers) { _, day ->
                 val dayInt = day.toIntOrNull()
+                val thisDay = dayInt?.let { selectedDate.withDayOfMonth(it) }
+
+                val isWeekend = thisDay?.dayOfWeek == DayOfWeek.SATURDAY || thisDay?.dayOfWeek == DayOfWeek.SUNDAY
+
+                val isToday = day == LocalDate.now().dayOfMonth.toString() &&
+                        selectedDate.month == LocalDate.now().month &&
+                        selectedDate.year == LocalDate.now().year
+
+                val isSelected = thisDay == selectedDay
+
+                val textColor = when {
+                    isToday && selectedDay != allMonthSelected -> MaterialTheme.colorScheme.onPrimary
+                    isSelected -> MaterialTheme.colorScheme.onSecondary
+                    else -> MaterialTheme.colorScheme.onSurface
+                }
+
+                val backgroundColor = when {
+                    isToday && selectedDay != allMonthSelected -> MaterialTheme.colorScheme.primary
+                    isSelected -> MaterialTheme.colorScheme.secondary
+                    isWeekend -> MaterialTheme.colorScheme.surfaceVariant // lighter color for weekend
+                    else -> MaterialTheme.colorScheme.surface
+                }
 
                 val eventCountForDay = dayInt?.let { d ->
                     events.value.count { event ->
@@ -181,25 +209,6 @@ fun CalendarScreen() {
                                 eventDate.dayOfMonth == d
                     }
                 } ?: 0
-
-                val isToday = day == LocalDate.now().dayOfMonth.toString() &&
-                        selectedDate.month == LocalDate.now().month &&
-                        selectedDate.year == LocalDate.now().year
-
-                val thisDay = dayInt?.let { selectedDate.withDayOfMonth(it) }
-                val isSelected = thisDay == selectedDay
-
-                val backgroundColor = when {
-                    isToday && selectedDay != allMonthSelected -> MaterialTheme.colorScheme.primary
-                    isSelected -> MaterialTheme.colorScheme.secondary
-                    else -> MaterialTheme.colorScheme.surface
-                }
-
-                val textColor = when {
-                    isToday && selectedDay != allMonthSelected -> MaterialTheme.colorScheme.onPrimary
-                    isSelected -> MaterialTheme.colorScheme.onSecondary
-                    else -> MaterialTheme.colorScheme.onSurface
-                }
 
                 Box(
                     modifier = Modifier
@@ -259,7 +268,7 @@ fun CalendarScreen() {
             text = if (selectedDay == allMonthSelected)
                 "Events in ${selectedDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())}"
             else
-                "Events on ${selectedDay.toString()}",
+                "Events on $selectedDay",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(vertical = 8.dp)
@@ -295,11 +304,11 @@ fun CalendarScreen() {
     }
 }
 
-
 @Composable
 fun EventItem(event: CalendarEvent) {
     val date = LocalDate.parse(event.date)
     val formattedDate = date.format(org.threeten.bp.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -325,9 +334,30 @@ fun EventItem(event: CalendarEvent) {
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primary
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        IconButton(onClick = {
+            val shareText = """
+                Event: ${event.event}
+                Description: ${event.description}
+                Date: $formattedDate
+                Category: ${event.type?.displayName ?: "Unknown"}
+            """.trimIndent()
+
+
+            val sendIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, shareText)
+                type = "text/plain"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, "Share event")
+            context.startActivity(shareIntent)
+        }) {
+            Icon(imageVector = Icons.Default.Share, contentDescription = "Share event")
+        }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
