@@ -7,5 +7,6 @@ data class CalendarEvent(
     val id: Int,
     val event: String,
     val description: String,
-    val date: String
+    val date: String,
+    val type: String? = null
 )

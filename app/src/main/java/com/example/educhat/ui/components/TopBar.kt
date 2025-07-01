@@ -39,17 +39,20 @@ fun TopBar(
             when (currentScreen) {
                 AppScreen.Home -> Text("EduChat")
                 AppScreen.Chat -> Text(ChatName ?: "Group Chat")
-                AppScreen.Profile -> Text("EduChat")
-                AppScreen.Program -> Text("EduChat")
+                AppScreen.Profile -> Text("Your Profile")
+                AppScreen.Program -> Text("Programs")
                 AppScreen.ProgramEdit -> Text("Edit Program")
-                AppScreen.Calendar -> Text("Calendar")  // <- add this
+                AppScreen.Calendar -> Text("Calendar")
+                AppScreen.CalendarEdit -> Text("Edit Calendar")
                 AppScreen.Login -> {}
                 AppScreen.SignUp -> {}
             }
         },
         navigationIcon = {
             when (currentScreen) {
-                AppScreen.Profile, AppScreen.Chat, AppScreen.Program, AppScreen.ProgramEdit, AppScreen.Calendar -> {
+                AppScreen.Profile, AppScreen.Chat, AppScreen.Program,
+                AppScreen.ProgramEdit, AppScreen.Calendar, AppScreen.CalendarEdit -> {
+
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
@@ -59,7 +62,8 @@ fun TopBar(
         },
         actions = {
             when (currentScreen) {
-                AppScreen.Home, AppScreen.Chat, AppScreen.Program, AppScreen.ProgramEdit, AppScreen.Calendar -> {
+                AppScreen.Home, AppScreen.Chat, AppScreen.Program,
+                AppScreen.ProgramEdit, AppScreen.Calendar, AppScreen.CalendarEdit -> {
 
                     val excludedScreens = listOf(AppScreen.Program, AppScreen.ProgramEdit)
                     if (currentScreen !in excludedScreens) {
@@ -80,22 +84,20 @@ fun TopBar(
                         }
                     }
 
-                    /*
-                        if (currentScreen == AppScreen.Calendar) {
-                            IconButton(onClick = { onNavigate(AppScreen.CalendarEdit) }) {
-                                Icon(
-                                    imageVector = Icons.Filled.AddCircle,
-                                    contentDescription = "Edit Program"
-                                )
-                            }
+                    if (currentScreen == AppScreen.Calendar) {
+                        IconButton(onClick = { onNavigate(AppScreen.CalendarEdit) }) {
+                            Icon(
+                                imageVector = Icons.Filled.AddCircle,
+                                contentDescription = "Add Calendar"
+                            )
                         }
-                     */
-
-                    IconButton(onClick = { onNavigate(AppScreen.Calendar) }) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarToday,
-                            contentDescription = "Calendar"
-                        )
+                    } else {
+                        IconButton(onClick = { onNavigate(AppScreen.Calendar) }) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = "Calendar"
+                            )
+                        }
                     }
 
                     IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
@@ -108,7 +110,6 @@ fun TopBar(
                                 .clip(MaterialTheme.shapes.extraLarge)
                         )
                     }
-
                 }
                 AppScreen.Profile, AppScreen.Login, AppScreen.SignUp -> {}
             }

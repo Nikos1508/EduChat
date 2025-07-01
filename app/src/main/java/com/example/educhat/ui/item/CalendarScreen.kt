@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,11 +50,9 @@ import java.util.Locale
 @Composable
 fun CalendarScreen() {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-
     val firstDayOfMonth = selectedDate.withDayOfMonth(1)
     val daysInMonth = selectedDate.lengthOfMonth()
     val startDayOfWeek = (firstDayOfMonth.dayOfWeek.value % 7)
-
     val totalBoxes = ((startDayOfWeek + daysInMonth + 6) / 7) * 7
 
     val dayNumbers = List(totalBoxes) { index ->
@@ -66,13 +66,28 @@ fun CalendarScreen() {
 
     val events = remember { mutableStateOf<List<CalendarEvent>>(emptyList()) }
 
+    // Nullable: selectedDay is null means 'all events of the month'
     var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val categories = listOf("All", "Meeting", "Exam", "Personal")
+    var selectedCategory by remember { mutableStateOf("All") }
+
+    fun getCategoryColor(category: String): Color {
+        return when (category.lowercase()) {
+            "meeting" -> Color(0xFF4CAF50)    // Green
+            "exam" -> Color(0xFFF44336)       // Red
+            "personal" -> Color(0xFF2196F3)   // Blue
+            else -> Color(0xFF9E9E9E)         // Gray
+        }
+    }
 
     LaunchedEffect(selectedDate) {
         events.value = CalendarRepository.getEventsForMonth(
             selectedDate.year,
             selectedDate.monthValue
         )
+        selectedDay = null // reset selected day when month changes
     }
 
     Column(
@@ -80,14 +95,22 @@ fun CalendarScreen() {
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // --- Header: Month + Prev/Next buttons ---
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(onClick = {
-                selectedDate = selectedDate.minusMonths(1)
-            }) {
+            val today = LocalDate.now()
+            val isPrevEnabled = selectedDate.year > today.year ||
+                    (selectedDate.year == today.year && selectedDate.monthValue > today.monthValue)
+
+            TextButton(
+                onClick = {
+                    if (isPrevEnabled) selectedDate = selectedDate.minusMonths(1)
+                },
+                enabled = isPrevEnabled
+            ) {
                 Text("< Prev")
             }
 
@@ -97,15 +120,30 @@ fun CalendarScreen() {
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            TextButton(onClick = {
-                selectedDate = selectedDate.plusMonths(1)
-            }) {
+            TextButton(
+                onClick = { selectedDate = selectedDate.plusMonths(1) }
+            ) {
                 Text("Next >")
+            }
+        }
+
+        // --- Today Button centered below header ---
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = {
+                selectedDate = LocalDate.now()
+                selectedDay = null
+            }) {
+                Text("Today")
             }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // --- Days of week headers ---
         Row(modifier = Modifier.fillMaxWidth()) {
             daysOfWeek.forEach { day ->
                 Text(
@@ -122,20 +160,20 @@ fun CalendarScreen() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Calendar Grid
+        // --- Calendar Grid ---
         LazyVerticalGrid(
             columns = GridCells.Fixed(7),
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .height(100.dp), // fixed height so search bar doesn't get overlapped
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             userScrollEnabled = false
         ) {
             itemsIndexed(dayNumbers) { index, day ->
-                val isToday = day == LocalDate.now().dayOfMonth.toString()
-                        && selectedDate.month == LocalDate.now().month
-                        && selectedDate.year == LocalDate.now().year
+                val isToday = day == LocalDate.now().dayOfMonth.toString() &&
+                        selectedDate.month == LocalDate.now().month &&
+                        selectedDate.year == LocalDate.now().year
 
                 val dayInt = day.toIntOrNull()
 
@@ -148,14 +186,13 @@ fun CalendarScreen() {
                     }
                 } ?: 0
 
-                val thisDay = dayInt?.let {
-                    selectedDate.withDayOfMonth(it)
-                }
+                val thisDay = dayInt?.let { selectedDate.withDayOfMonth(it) }
                 val isSelected = thisDay == selectedDay
 
                 Box(
                     modifier = Modifier
                         .aspectRatio(1f)
+                        .clip(RoundedCornerShape(12.dp))
                         .background(
                             when {
                                 isSelected -> MaterialTheme.colorScheme.secondary
@@ -163,13 +200,15 @@ fun CalendarScreen() {
                                 else -> MaterialTheme.colorScheme.surface
                             }
                         )
+                        // --- ONLY selectable if day is valid (not empty) ---
                         .clickable(enabled = day.isNotEmpty()) {
                             thisDay?.let { selectedDay = it }
                         }
-                ){
+                ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         Text(
                             text = day,
@@ -181,12 +220,21 @@ fun CalendarScreen() {
                                 horizontalArrangement = Arrangement.Center,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                repeat(eventCountForDay) {
+                                val dayEvents = dayInt?.let { d ->
+                                    events.value.filter { event ->
+                                        val eventDate = LocalDate.parse(event.date)
+                                        eventDate.year == selectedDate.year &&
+                                                eventDate.month == selectedDate.month &&
+                                                eventDate.dayOfMonth == d
+                                    }
+                                } ?: emptyList()
+
+                                dayEvents.take(3).forEach { event ->
                                     Box(
                                         modifier = Modifier
                                             .size(6.dp)
                                             .background(
-                                                color = MaterialTheme.colorScheme.primary,
+                                                color = getCategoryColor(event.type ?: "all"),
                                                 shape = CircleShape
                                             )
                                     )
@@ -199,20 +247,60 @@ fun CalendarScreen() {
             }
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // --- Tap outside calendar to select whole month (Add a box above search for this) ---
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clickable {
+                    selectedDay = null
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (selectedDay == null) "Viewing all events for the month" else "Tap here to view all month events",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // --- Search Bar for whole month events ---
+        TextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Search all events in this month...") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Upcoming Events",
+            text = if (selectedDay == null) "Events in ${selectedDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())}" else "Events on ${selectedDay.toString()}",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(vertical = 8.dp)
         )
 
-        if (events.value.isEmpty()) {
+        // --- Event list filtered by search and selectedDay or whole month ---
+        val filteredEvents = events.value.filter { event ->
+            val eventDate = LocalDate.parse(event.date)
+            val matchesDate = selectedDay == null || eventDate == selectedDay
+            val matchesSearch = event.event.contains(searchQuery, ignoreCase = true) ||
+                    event.description.contains(searchQuery, ignoreCase = true)
+            val matchesCategory = selectedCategory == "All" || event.type.equals(selectedCategory, ignoreCase = true)
+            matchesDate && matchesSearch && matchesCategory
+        }
+
+        if (filteredEvents.isEmpty()) {
             Text(
-                text = "No events this month.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                text = "No events found.",
+                modifier = Modifier.padding(8.dp),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
         } else {
             LazyColumn(
@@ -221,28 +309,14 @@ fun CalendarScreen() {
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                val filteredEvents = selectedDay?.let { selected ->
-                    events.value.filter { LocalDate.parse(it.date) == selected }
-                } ?: events.value
-
-                if (filteredEvents.isEmpty()) {
-                    item {
-                        Text(
-                            text = "No events on ${selectedDay?.toString() ?: "this month"}",
-                            modifier = Modifier.padding(8.dp),
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    }
-                } else {
-                    // This requires correct import of `items` from `foundation.lazy`
-                    items(filteredEvents) { event ->
-                        EventItem(event = event)
-                    }
+                items(filteredEvents) { event ->
+                    EventItem(event = event)
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun EventItem(event: CalendarEvent) {
