@@ -23,4 +23,12 @@ object CalendarRepository {
             }
         }
     }
+
+    suspend fun addEvent(event: CalendarEvent) {
+        withContext(Dispatchers.IO) {
+            SupabaseClient.client.postgrest
+                .from("calendar")
+                .insert(event)
+        }
+    }
 }
