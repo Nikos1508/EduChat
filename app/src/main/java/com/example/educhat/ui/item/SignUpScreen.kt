@@ -252,9 +252,9 @@ fun SignUpScreen(
 
             Button(
                 onClick = {
-                    if (email.isNotBlank() && password.isNotBlank()/* && displayName.isNotBlank() */ ) {
+                    if (email.isNotBlank() && password.isNotBlank() && displayName.isNotBlank() ) {
                         signUpAttemptMade = true
-                        viewModel.signUp(context, email, password/* , displayName*/)
+                        viewModel.signUp(context, email, password, displayName)
                     } else {
                         Toast.makeText(context, "All fields must be filled", Toast.LENGTH_SHORT).show()
                     }

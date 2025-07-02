@@ -46,6 +46,7 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val userEmail by viewModel.currentUserEmail
+    val userProfile by viewModel.userProfile
 
     Column(
         modifier = modifier
@@ -65,7 +66,7 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "John Doe",
+            text = userProfile?.displayName ?: "Unknown User",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Bold

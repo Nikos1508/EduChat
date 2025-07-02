@@ -68,8 +68,6 @@ android {
 }
 
 dependencies {
-
-
     // Core libraries
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.activity:activity-ktx:1.8.0")

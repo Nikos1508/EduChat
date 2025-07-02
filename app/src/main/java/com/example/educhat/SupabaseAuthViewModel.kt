@@ -6,24 +6,30 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.educhat.data.model.UserProfile
 import com.example.educhat.data.model.UserState
 import com.example.educhat.data.network.SupabaseClient.client
+import com.example.educhat.data.repository.ProfileRepository
 import com.example.educhat.utils.SharedPreferenceHelper
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.RestException
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-// import io.github.jan.supabase.auth.UpdateUserRequest
-// import io.github.jan.supabase.auth.UserUpdateResponse
 
 
 class SupabaseAuthViewModel : ViewModel() {
 
+    private val profileRepository = ProfileRepository()
+
     private val _userState = mutableStateOf<UserState>(UserState.Success(""))
     val userState: State<UserState> = _userState
+
+    private val _userProfile = mutableStateOf<UserProfile?>(null)
+    val userProfile: State<UserProfile?> = _userProfile
 
     private val _currentUserEmail = mutableStateOf<String?>(null)
     val currentUserEmail: State<String?> = _currentUserEmail
@@ -94,21 +100,38 @@ class SupabaseAuthViewModel : ViewModel() {
         }
     }
 
-    /*
-    suspend fun updateDisplayName(displayName: String) {
-        val result = client.auth.updateUser {
-            userMetadata = mapOf("display_name" to displayName)
-        }
-        if (result.error == null) {
-            println("Display name updated successfully")
-        } else {
-            println("Failed to update display name: ${result.error?.message}")
+
+    suspend fun createProfile(displayName: String): Boolean = withContext(Dispatchers.IO) {
+        val user = client.auth.currentUserOrNull() ?: return@withContext false
+        val userId = user.id
+
+        val profileData = mapOf(
+            "id" to userId,
+            "display_name" to displayName,
+            "description" to null,
+            "profile_image_url" to null
+        )
+
+        try {
+            client.postgrest["profiles"].insert(profileData)
+            Log.d("createProfile", "Profile created successfully")
+            true
+        } catch (e: Exception) {
+            Log.e("createProfile", "Exception while creating profile", e)
+            false
         }
     }
 
- */
+    fun loadUserProfile() {
+        client.auth.currentUserOrNull()?.let { user ->
+            viewModelScope.launch {
+                val profile = profileRepository.getUserProfile(user.id)
+                _userProfile.value = profile
+            }
+        }
+    }
 
-    fun signUp(context: Context, userEmail: String, userPassword: String) {
+    fun signUp(context: Context, userEmail: String, userPassword: String, displayName: String) {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
@@ -116,9 +139,16 @@ class SupabaseAuthViewModel : ViewModel() {
                     email = userEmail
                     password = userPassword
                 }
+
+                val success = createProfile(displayName)
+                if (!success) {
+                    _userState.value = UserState.Error("Failed to create user profile.")
+                    return@launch
+                }
+
                 saveTokens(context)
                 loadCurrentUserEmail()
-                _userState.value = UserState.Success("Registered successfully! Check your email.")
+                _userState.value = UserState.Success("Registered successfully!")
             } catch (e: Exception) {
                 val errorMessage = when (e) {
                     is RestException -> e.error ?: "Registration failed. Server error."
@@ -140,6 +170,7 @@ class SupabaseAuthViewModel : ViewModel() {
                 }
                 saveTokens(context)
                 loadCurrentUserEmail()
+                loadUserProfile()
                 _userState.value = UserState.Success("Logged in successfully!")
             } catch (e: Exception) {
                 val errorMessage = when (e) {
@@ -174,9 +205,12 @@ class SupabaseAuthViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             val success = refreshSessionManually(context)
-            if (!success) {
+            if (success) {
+                loadUserProfile()
+            } else {
                 clearTokens(context)
                 _currentUserEmail.value = null
+                _userProfile.value = null
                 _userState.value = UserState.Success("User not logged in!")
             }
         }
