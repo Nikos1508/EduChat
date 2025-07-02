@@ -52,6 +52,7 @@ fun SignUpScreen(
     val context = LocalContext.current
     val userStateValue = viewModel.userState.value
 
+    var displayName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -59,6 +60,7 @@ fun SignUpScreen(
 
     var emailFocused by remember { mutableStateOf(false) }
     var passwordFocused by remember { mutableStateOf(false) }
+    var displayNameFocused by remember { mutableStateOf(false) }
 
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -203,13 +205,58 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            //Display name input
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Display Name",
+                    fontSize = if (displayNameFocused || displayName.isNotEmpty()) 12.sp else 16.sp,
+                    color = if (displayNameFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = if (displayNameFocused || displayName.isNotEmpty()) 4.dp else 8.dp)
+                )
+
+                BasicTextField(
+                    value = displayName,
+                    onValueChange = { displayName = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { displayNameFocused = it.isFocused },
+                    textStyle = TextStyle(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 16.sp
+                    ),
+                    singleLine = true,
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (displayName.isEmpty() && (displayNameFocused || displayName.isNotEmpty())) {
+                                Text(
+                                    "Enter your display name",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 16.sp
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+                HorizontalDivider(
+                    thickness = if (displayNameFocused) 2.dp else 1.dp,
+                    color = if (displayNameFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
                 onClick = {
-                    if (email.isNotBlank() && password.isNotBlank()) {
+                    if (email.isNotBlank() && password.isNotBlank()/* && displayName.isNotBlank() */ ) {
                         signUpAttemptMade = true
-                        viewModel.signUp(context, email, password)
+                        viewModel.signUp(context, email, password/* , displayName*/)
                     } else {
-                        Toast.makeText(context, "Email and password cannot be empty", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "All fields must be filled", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier

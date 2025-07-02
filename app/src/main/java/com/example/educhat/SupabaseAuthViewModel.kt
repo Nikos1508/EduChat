@@ -16,6 +16,9 @@ import io.github.jan.supabase.exceptions.RestException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+// import io.github.jan.supabase.auth.UpdateUserRequest
+// import io.github.jan.supabase.auth.UserUpdateResponse
+
 
 class SupabaseAuthViewModel : ViewModel() {
 
@@ -69,13 +72,11 @@ class SupabaseAuthViewModel : ViewModel() {
         }
 
         try {
-            // Supabase client does not provide explicit refresh call in SDK,
-            // so we can invoke the refreshCurrentSession() to let SDK handle refresh internally.
             client.auth.refreshCurrentSession()
 
             val currentUser = client.auth.currentUserOrNull()
             if (currentUser != null) {
-                saveTokens(context)  // Save new tokens after refresh
+                saveTokens(context)
                 loadCurrentUserEmail()
                 _userState.value = UserState.Success("User already logged in!")
                 return@withContext true
@@ -92,6 +93,20 @@ class SupabaseAuthViewModel : ViewModel() {
             return@withContext false
         }
     }
+
+    /*
+    suspend fun updateDisplayName(displayName: String) {
+        val result = client.auth.updateUser {
+            userMetadata = mapOf("display_name" to displayName)
+        }
+        if (result.error == null) {
+            println("Display name updated successfully")
+        } else {
+            println("Failed to update display name: ${result.error?.message}")
+        }
+    }
+
+ */
 
     fun signUp(context: Context, userEmail: String, userPassword: String) {
         viewModelScope.launch {

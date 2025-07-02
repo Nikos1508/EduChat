@@ -40,7 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.educhat.ui.components.MessageItem
+import com.example.educhat.ui.components.MessageItemLeft
 import com.example.educhat.ui.theme.EduChatTheme
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
@@ -159,7 +159,7 @@ fun NotesList(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxSize()
         ) {
             items(notes, key = { it.id }) { note ->
-                MessageItem(
+                MessageItemLeft(
                     text = note.body,
                     modifier = Modifier.animateItemPlacement()
                 )

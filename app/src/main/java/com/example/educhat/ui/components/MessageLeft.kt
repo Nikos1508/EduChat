@@ -22,13 +22,13 @@ import com.example.educhat.R
 import com.example.educhat.ui.theme.EduChatTheme
 
 @Composable
-fun MessageItem(text: String, modifier: Modifier = Modifier, ) {
+fun MessageItemLeft(text: String, modifier: Modifier = Modifier, ) {
     Column(modifier = modifier.padding(4.dp)) {
         Card(
             shape = RoundedCornerShape(
-                topStart = 24.dp,
-                topEnd = 24.dp,
-                bottomEnd = 24.dp,
+                topStart = 18.dp,
+                topEnd = 18.dp,
+                bottomEnd = 18.dp,
                 bottomStart = 2.dp
             ),
             modifier = Modifier
@@ -62,16 +62,16 @@ fun MessageItem(text: String, modifier: Modifier = Modifier, ) {
 
 @Preview(showBackground = true)
 @Composable
-fun MessagePreviewLight() {
-    EduChatTheme {
-        MessageItem(text = "Test Light", modifier = Modifier.padding(4.dp))
+fun MessageItemLeftPreviewLight() {
+    EduChatTheme(darkTheme = false) {
+        MessageItemLeft(text = "Test Light", modifier = Modifier.padding(4.dp))
     }
 }
 
 @Preview
 @Composable
-fun MessagePreviewDark() {
+fun MessageItemLeftPreviewDark() {
     EduChatTheme(darkTheme = true) {
-        MessageItem(text = "Test Dark", modifier = Modifier.padding(4.dp))
+        MessageItemLeft(text = "Test Dark", modifier = Modifier.padding(4.dp))
     }
 }
