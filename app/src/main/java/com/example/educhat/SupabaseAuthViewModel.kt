@@ -1,6 +1,8 @@
 package com.example.educhat
 
+import android.content.ContentResolver
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -8,18 +10,31 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educhat.data.model.UserProfile
 import com.example.educhat.data.model.UserState
-import com.example.educhat.data.network.SupabaseClient.client
+import com.example.educhat.data.network.SupabaseClient
 import com.example.educhat.data.repository.ProfileRepository
 import com.example.educhat.utils.SharedPreferenceHelper
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.RestException
 import io.github.jan.supabase.postgrest.postgrest
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.header
+import io.ktor.client.request.patch
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 class SupabaseAuthViewModel : ViewModel() {
 
@@ -34,12 +49,15 @@ class SupabaseAuthViewModel : ViewModel() {
     private val _currentUserEmail = mutableStateOf<String?>(null)
     val currentUserEmail: State<String?> = _currentUserEmail
 
-    /**
-     * Save current session tokens into SharedPreferences.
-     */
+    private val httpClient = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(Json { ignoreUnknownKeys = true })
+        }
+    }
+
     private fun saveTokens(context: Context) {
         viewModelScope.launch {
-            val session = client.auth.currentSessionOrNull()
+            val session = SupabaseClient.client.auth.currentSessionOrNull()
             val sharedPref = SharedPreferenceHelper(context)
             sharedPref.saveStringData("accessToken", session?.accessToken)
             sharedPref.saveStringData("refreshToken", session?.refreshToken)
@@ -47,27 +65,17 @@ class SupabaseAuthViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Clear tokens from SharedPreferences.
-     */
     private fun clearTokens(context: Context) {
         val sharedPref = SharedPreferenceHelper(context)
         sharedPref.clearPreferences()
         Log.d("AuthVM", "Tokens cleared.")
     }
 
-    /**
-     * Load current user's email from Supabase client.
-     */
     fun loadCurrentUserEmail() {
-        val user = client.auth.currentUserOrNull()
+        val user = SupabaseClient.client.auth.currentUserOrNull()
         _currentUserEmail.value = user?.email
     }
 
-    /**
-     * Attempt to refresh session tokens manually using stored refresh token.
-     * Returns true if refreshed successfully, false otherwise.
-     */
     suspend fun refreshSessionManually(context: Context): Boolean = withContext(Dispatchers.IO) {
         val sharedPref = SharedPreferenceHelper(context)
         val refreshToken = sharedPref.getStringData("refreshToken")
@@ -78,31 +86,30 @@ class SupabaseAuthViewModel : ViewModel() {
         }
 
         try {
-            client.auth.refreshCurrentSession()
+            SupabaseClient.client.auth.refreshCurrentSession()
 
-            val currentUser = client.auth.currentUserOrNull()
+            val currentUser = SupabaseClient.client.auth.currentUserOrNull()
             if (currentUser != null) {
                 saveTokens(context)
                 loadCurrentUserEmail()
                 _userState.value = UserState.Success("User already logged in!")
-                return@withContext true
+                true
             } else {
                 clearTokens(context)
                 _currentUserEmail.value = null
                 _userState.value = UserState.Success("User not logged in!")
-                return@withContext false
+                false
             }
         } catch (e: Exception) {
             clearTokens(context)
             _currentUserEmail.value = null
             _userState.value = UserState.Error("Session expired. Please log in.")
-            return@withContext false
+            false
         }
     }
 
-
     suspend fun createProfile(displayName: String): Boolean = withContext(Dispatchers.IO) {
-        val user = client.auth.currentUserOrNull() ?: return@withContext false
+        val user = SupabaseClient.client.auth.currentUserOrNull() ?: return@withContext false
         val userId = user.id
 
         val profileData = mapOf(
@@ -113,7 +120,7 @@ class SupabaseAuthViewModel : ViewModel() {
         )
 
         try {
-            client.postgrest["profiles"].insert(profileData)
+            SupabaseClient.client.postgrest["profiles"].insert(profileData)
             Log.d("createProfile", "Profile created successfully")
             true
         } catch (e: Exception) {
@@ -122,27 +129,8 @@ class SupabaseAuthViewModel : ViewModel() {
         }
     }
 
-    suspend fun updateProfile(newDisplayName: String, newDescription: String?): Boolean = withContext(Dispatchers.IO) {
-        val user = client.auth.currentUserOrNull() ?: return@withContext false
-        val userId = user.id
-
-        val updateData = mapOf(
-            "id" to userId,
-            "display_name" to newDisplayName,
-            "description" to newDescription
-        )
-
-        return@withContext try {
-            client.postgrest["profiles"].upsert(updateData) // upsert avoids eq filtering
-            true
-        } catch (e: Exception) {
-            Log.e("updateProfile", "Failed to update profile", e)
-            false
-        }
-    }
-
     fun loadUserProfile() {
-        client.auth.currentUserOrNull()?.let { user ->
+        SupabaseClient.client.auth.currentUserOrNull()?.let { user ->
             viewModelScope.launch {
                 val profile = profileRepository.getUserProfile(user.id)
                 _userProfile.value = profile
@@ -150,11 +138,72 @@ class SupabaseAuthViewModel : ViewModel() {
         }
     }
 
+    suspend fun updateProfile(
+        newDisplayName: String,
+        newDescription: String,
+        newImageUrl: String? = null
+    ): Boolean {
+        val user = SupabaseClient.client.auth.currentUserOrNull() ?: return false
+        val token = SupabaseClient.client.auth.currentSessionOrNull()?.accessToken ?: return false
+
+        val body = buildJsonObject {
+            put("display_name", newDisplayName)
+            put("description", newDescription)
+            newImageUrl?.let { put("profile_image_url", it) }
+        }
+
+        val url = "${BuildConfig.supabaseUrl}/rest/v1/profiles?id=eq.${user.id}"
+
+        return try {
+            val response: HttpResponse = httpClient.patch(url) {
+                header("apikey", BuildConfig.supabaseKey)
+                header("Authorization", "Bearer $token")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+            response.status.isSuccess()
+        } catch (e: Exception) {
+            Log.e("updateProfile", "Update failed", e)
+            false
+        }
+    }
+
+    suspend fun uploadProfileImage(uri: Uri, resolver: ContentResolver): String? {
+        val user = SupabaseClient.client.auth.currentUserOrNull() ?: return null
+        val token = SupabaseClient.client.auth.currentSessionOrNull()?.accessToken ?: return null
+
+        val bucket = "profile-images"
+        val fileName = "profile.png"
+        val path = "${user.id}/$fileName"
+
+        val bytes = resolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
+
+        val url = "${BuildConfig.supabaseUrl}/storage/v1/object/$bucket/$path"
+
+        return try {
+            val response: HttpResponse = httpClient.put(url) {
+                header("apikey", BuildConfig.supabaseKey)
+                header("Authorization", "Bearer $token")
+                contentType(ContentType.Application.OctetStream)
+                setBody(bytes)
+            }
+
+            if (response.status.isSuccess()) {
+                "${BuildConfig.supabaseUrl}/storage/v1/object/public/$bucket/$path"
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("uploadProfileImage", "Upload failed", e)
+            null
+        }
+    }
+
     fun signUp(context: Context, userEmail: String, userPassword: String, displayName: String) {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
-                client.auth.signUpWith(Email) {
+                SupabaseClient.client.auth.signUpWith(io.github.jan.supabase.auth.providers.builtin.Email) {
                     email = userEmail
                     password = userPassword
                 }
@@ -183,7 +232,7 @@ class SupabaseAuthViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
-                client.auth.signInWith(Email) {
+                SupabaseClient.client.auth.signInWith(io.github.jan.supabase.auth.providers.builtin.Email) {
                     email = userEmail
                     password = userPassword
                 }
@@ -206,9 +255,10 @@ class SupabaseAuthViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
-                client.auth.signOut()
+                SupabaseClient.client.auth.signOut()
                 clearTokens(context)
                 _currentUserEmail.value = null
+                _userProfile.value = null
                 _userState.value = UserState.Success("Logged out successfully!")
             } catch (e: Exception) {
                 _userState.value = UserState.Error(e.message ?: "Logout failed.")
@@ -216,10 +266,6 @@ class SupabaseAuthViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Checks if user is logged in by trying to refresh session tokens.
-     * Should be called on app start to skip login screen if valid token exists.
-     */
     fun isUserLoggedIn(context: Context) {
         viewModelScope.launch {
             _userState.value = UserState.Loading

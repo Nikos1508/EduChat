@@ -23,6 +23,7 @@ import com.example.educhat.ui.components.TopBar
 import com.example.educhat.ui.item.CalendarEditScreen
 import com.example.educhat.ui.item.CalendarScreen
 import com.example.educhat.ui.item.ChatScreen
+import com.example.educhat.ui.item.EditProfileScreen
 import com.example.educhat.ui.item.HomeScreen
 import com.example.educhat.ui.item.LoginScreen
 import com.example.educhat.ui.item.ProfileScreen
@@ -51,6 +52,7 @@ enum class AppScreen {
     SignUp,
     Home,
     Profile,
+    EditProfile,
     Chat,
     Program,
     ProgramEdit,
@@ -172,6 +174,9 @@ fun EduChatApp() {
                         }
                     }
                 )
+            }
+            composable(AppScreen.EditProfile.name) {
+                EditProfileScreen()
             }
             composable(AppScreen.Chat.name + "/{groupName}") { backStackEntry ->
                 val groupName = backStackEntry.arguments?.getString("groupName")

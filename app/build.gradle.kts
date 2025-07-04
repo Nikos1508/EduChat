@@ -113,6 +113,11 @@ dependencies {
     // Image loading for Jetpack Compose
     implementation("io.coil-kt:coil-compose:2.7.0")
 
+    implementation("io.ktor:ktor-client-content-negotiation:3.1.3")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.3")
+
+    implementation("io.github.vanpra.compose-image-picker:compose-image-picker:1.0.0-beta01")
+
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
 

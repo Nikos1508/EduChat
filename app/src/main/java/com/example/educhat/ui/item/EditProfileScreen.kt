@@ -1,6 +1,6 @@
 package com.example.educhat.ui.item
 
-import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -16,28 +16,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.educhat.SupabaseAuthViewModel
-import kotlinx.coroutines.launch
+import com.example.educhat.R
 
 @Composable
 fun EditProfileScreen(
-    viewModel: SupabaseAuthViewModel,
-    navController: NavController
+    onSaveClicked: () -> Unit = {},
+    onChooseImageClicked: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val userProfile by viewModel.userProfile
-
-    var displayName by remember { mutableStateOf(TextFieldValue(userProfile?.displayName ?: "")) }
-    var description by remember { mutableStateOf(TextFieldValue(userProfile?.description ?: "")) }
+    var displayName by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -46,12 +38,25 @@ fun EditProfileScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Edit Profile",
-            style = MaterialTheme.typography.headlineMedium
+        Text("Edit Profile", style = MaterialTheme.typography.headlineMedium)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Image(
+            painter = painterResource(id = R.drawable.profile_image),
+            contentDescription = "Profile Image",
+            modifier = Modifier
+                .height(120.dp)
+                .fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(onClick = onChooseImageClicked) {
+            Text("Choose Profile Image")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
             value = displayName,
@@ -73,19 +78,7 @@ fun EditProfileScreen(
 
         Button(
             onClick = {
-                scope.launch {
-                    val success = viewModel.updateProfile(
-                        newDisplayName = displayName.text,
-                        newDescription = description.text
-                    )
-                    if (success) {
-                        Toast.makeText(context, "Profile updated", Toast.LENGTH_SHORT).show()
-                        viewModel.loadUserProfile()
-                        navController.popBackStack() // go back
-                    } else {
-                        Toast.makeText(context, "Failed to update profile", Toast.LENGTH_SHORT).show()
-                    }
-                }
+
             },
             modifier = Modifier.fillMaxWidth()
         ) {
