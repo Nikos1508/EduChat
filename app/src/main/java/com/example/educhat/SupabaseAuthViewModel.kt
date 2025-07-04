@@ -36,6 +36,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
+
 class SupabaseAuthViewModel : ViewModel() {
 
     private val profileRepository = ProfileRepository()
@@ -139,8 +140,8 @@ class SupabaseAuthViewModel : ViewModel() {
     }
 
     suspend fun updateProfile(
-        newDisplayName: String,
-        newDescription: String,
+        newDisplayName: String? = null,
+        newDescription: String? = null,
         newImageUrl: String? = null
     ): Boolean {
         val user = SupabaseClient.client.auth.currentUserOrNull() ?: return false
@@ -184,8 +185,8 @@ class SupabaseAuthViewModel : ViewModel() {
             val response: HttpResponse = httpClient.put(url) {
                 header("apikey", BuildConfig.supabaseKey)
                 header("Authorization", "Bearer $token")
-                contentType(ContentType.Application.OctetStream)
-                setBody(bytes)
+                contentType(ContentType.Image.PNG) // or appropriate type
+                setBody(bytes)  // raw bytes, no multipart needed
             }
 
             if (response.status.isSuccess()) {

@@ -110,12 +110,11 @@ dependencies {
 
     // Networking (Ktor)
     implementation("io.ktor:ktor-client-cio:3.1.3")
+    implementation("io.ktor:ktor-client-content-negotiation:3.1.3")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.3")
 
     // Image loading for Jetpack Compose
     implementation("io.coil-kt:coil-compose:2.7.0")
-
-    implementation("io.ktor:ktor-client-content-negotiation:3.1.3")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.3")
 
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
@@ -123,4 +122,7 @@ dependencies {
     //For the calendar
     implementation("com.jakewharton.threetenabp:threetenabp:1.4.5")
     implementation("org.threeten:threetenbp:1.6.6:no-tzdb")
+
+    //For croping images
+    implementation("com.github.yalantis:ucrop:2.2.8")
 }
