@@ -122,6 +122,25 @@ class SupabaseAuthViewModel : ViewModel() {
         }
     }
 
+    suspend fun updateProfile(newDisplayName: String, newDescription: String?): Boolean = withContext(Dispatchers.IO) {
+        val user = client.auth.currentUserOrNull() ?: return@withContext false
+        val userId = user.id
+
+        val updateData = mapOf(
+            "id" to userId,
+            "display_name" to newDisplayName,
+            "description" to newDescription
+        )
+
+        return@withContext try {
+            client.postgrest["profiles"].upsert(updateData) // upsert avoids eq filtering
+            true
+        } catch (e: Exception) {
+            Log.e("updateProfile", "Failed to update profile", e)
+            false
+        }
+    }
+
     fun loadUserProfile() {
         client.auth.currentUserOrNull()?.let { user ->
             viewModelScope.launch {
