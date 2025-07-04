@@ -6,28 +6,11 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,13 +35,17 @@ fun EditProfileScreen(
     val scope = rememberCoroutineScope()
     val userProfile by viewModel.userProfile
 
-    var displayName by remember { mutableStateOf(userProfile?.displayName ?: "") }
-    var description by remember { mutableStateOf(userProfile?.description ?: "") }
+    var displayName by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    LaunchedEffect(userProfile) {
+        displayName = userProfile?.displayName ?: ""
+        description = userProfile?.description ?: ""
+    }
 
     var isEditingName by remember { mutableStateOf(false) }
     var isEditingDesc by remember { mutableStateOf(false) }
-    var isEditingImage by remember { mutableStateOf(false) }
 
     val cropLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -93,11 +80,10 @@ fun EditProfileScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Edit Profile", style = MaterialTheme.typography.headlineMedium)
-
         Spacer(modifier = Modifier.height(16.dp))
 
         val imagePainter = rememberAsyncImagePainter(
-            model = selectedImageUri ?: userProfile?.profileImageUrl ?: R.drawable.profile_image,
+            model = selectedImageUri ?: userProfile?.profileImageUrl ?: R.drawable.profile_image
         )
 
         Image(
@@ -110,50 +96,54 @@ fun EditProfileScreen(
             contentScale = ContentScale.Crop
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
         Button(onClick = { imagePickerLauncher.launch("image/*") }) {
             Text("Change Profile Image")
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // --- Name Section ---
         if (isEditingName) {
             OutlinedTextField(
                 value = displayName,
                 onValueChange = { displayName = it },
                 label = { Text("Display Name") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    cursorColor = MaterialTheme.colorScheme.primary,
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = { isEditingName = false }) {
+                Text("Done")
+            }
         } else {
-            Text("Name: ${userProfile?.displayName ?: "N/A"}")
+            Text("Name: $displayName", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(4.dp))
             Button(onClick = { isEditingName = true }) {
-                Text("Edit Display Name")
+                Text("Edit Name")
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // --- Description Section ---
         if (isEditingDesc) {
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                        cursorColor = MaterialTheme.colorScheme.primary,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = { isEditingDesc = false }) {
+                Text("Done")
+            }
         } else {
-            Text("Description: ${userProfile?.description ?: "N/A"}")
+            Text("Description: $description", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.height(4.dp))
             Button(onClick = { isEditingDesc = true }) {
                 Text("Edit Description")
@@ -174,9 +164,12 @@ fun EditProfileScreen(
                         )
                     }
 
+                    val nameToUpdate = if (displayName != userProfile?.displayName) displayName else null
+                    val descToUpdate = if (description != userProfile?.description) description else null
+
                     val success = viewModel.updateProfile(
-                        newDisplayName = if (displayName != userProfile?.displayName) displayName else null,
-                        newDescription = if (description != userProfile?.description) description else null,
+                        newDisplayName = nameToUpdate
+                        newDescription = descToUpdate,
                         newImageUrl = uploadedImageUrl
                     )
 
@@ -189,8 +182,7 @@ fun EditProfileScreen(
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text("Save Changes")
         }

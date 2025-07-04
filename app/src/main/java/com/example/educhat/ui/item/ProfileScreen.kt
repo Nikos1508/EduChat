@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.educhat.AppScreen
 import com.example.educhat.R
 import com.example.educhat.SupabaseAuthViewModel
@@ -59,7 +60,12 @@ fun ProfileScreen(
     ) {
         Image(
             painter = rememberAsyncImagePainter(
-                model = userProfile?.profileImageUrl ?: R.drawable.profile_image
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(userProfile?.profileImageUrl)
+                    .crossfade(true)
+                    .error(R.drawable.profile_image)
+                    .placeholder(R.drawable.profile_image)
+                    .build()
             ),
             contentDescription = "Profile Picture",
             modifier = Modifier
@@ -68,6 +74,7 @@ fun ProfileScreen(
                 .border(2.dp, Color.Gray, CircleShape),
             contentScale = ContentScale.Crop
         )
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
