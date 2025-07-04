@@ -176,7 +176,10 @@ fun EduChatApp() {
                 )
             }
             composable(AppScreen.EditProfile.name) {
-                EditProfileScreen()
+                EditProfileScreen(
+                    viewModel = viewModel(),
+                    navController = navController
+                )
             }
             composable(AppScreen.Chat.name + "/{groupName}") { backStackEntry ->
                 val groupName = backStackEntry.arguments?.getString("groupName")

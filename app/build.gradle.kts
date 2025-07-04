@@ -71,6 +71,7 @@ dependencies {
     // Core libraries
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.activity:activity-ktx:1.8.0")
+    implementation("androidx.activity:activity-compose:1.7.2")
 
     // Compose BOM to manage versions
     implementation(platform("androidx.compose:compose-bom:2024.05.00"))
@@ -115,8 +116,6 @@ dependencies {
 
     implementation("io.ktor:ktor-client-content-negotiation:3.1.3")
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.3")
-
-    implementation("io.github.vanpra.compose-image-picker:compose-image-picker:1.0.0-beta01")
 
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")

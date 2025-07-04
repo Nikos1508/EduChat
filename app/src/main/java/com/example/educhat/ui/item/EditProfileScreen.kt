@@ -1,5 +1,9 @@
 package com.example.educhat.ui.item
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,20 +20,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.educhat.R
+import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import com.example.educhat.SupabaseAuthViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun EditProfileScreen(
-    onSaveClicked: () -> Unit = {},
-    onChooseImageClicked: () -> Unit = {}
+    viewModel: SupabaseAuthViewModel,
+    navController: NavController
 ) {
-    var displayName by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val userProfile by viewModel.userProfile
+
+    var displayName by remember { mutableStateOf(userProfile?.displayName ?: "") }
+    var description by remember { mutableStateOf(userProfile?.description ?: "") }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri -> selectedImageUri = uri }
 
     Column(
         modifier = Modifier
@@ -42,17 +59,21 @@ fun EditProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        val imagePainter = rememberAsyncImagePainter(
+            model = selectedImageUri ?: userProfile?.profileImageUrl
+        )
         Image(
-            painter = painterResource(id = R.drawable.profile_image),
+            painter = imagePainter,
             contentDescription = "Profile Image",
             modifier = Modifier
                 .height(120.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(onClick = onChooseImageClicked) {
+        Button(onClick = { imagePickerLauncher.launch("image/*") }) {
             Text("Choose Profile Image")
         }
 
@@ -78,7 +99,31 @@ fun EditProfileScreen(
 
         Button(
             onClick = {
+                scope.launch {
+                    var uploadedImageUrl: String? = null
 
+                    if (selectedImageUri != null) {
+                        uploadedImageUrl = viewModel.uploadProfileImage(
+                            selectedImageUri!!,
+                            context.contentResolver
+                        )
+                    }
+
+                    val success = viewModel.updateProfile(
+                        newDisplayName = displayName,
+                        newDescription = description,
+                        newImageUrl = uploadedImageUrl
+                    )
+
+                    if (success) {
+                        Toast.makeText(context, "Profile updated", Toast.LENGTH_SHORT).show()
+                        viewModel.loadUserProfile()
+                        navController.popBackStack()
+                    } else {
+                        Toast.makeText(context, "Failed to update profile", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                }
             },
             modifier = Modifier.fillMaxWidth()
         ) {

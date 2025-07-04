@@ -34,6 +34,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.educhat.AppScreen
 import com.example.educhat.R
 import com.example.educhat.SupabaseAuthViewModel
 
@@ -41,7 +43,7 @@ import com.example.educhat.SupabaseAuthViewModel
 fun ProfileScreen(
     modifier: Modifier = Modifier,
     viewModel: SupabaseAuthViewModel,
-    navController: androidx.navigation.NavController,
+    navController: NavController,
     onLogoutComplete: () -> Unit
 ) {
     val context = LocalContext.current
@@ -81,12 +83,31 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
-        ProfileOptionItem(icon = Icons.Default.Person, text = "Account Info", onClick = { /* TODO */ })
+
+        ProfileOptionItem(
+            icon = Icons.Default.Person,
+            text = "Account Info",
+            onClick = { navController.navigate(AppScreen.EditProfile.name) }
+        )
+
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
-        ProfileOptionItem(icon = Icons.Default.Settings, text = "Settings", onClick = { /* TODO */ })
+
+        ProfileOptionItem(
+            icon = Icons.Default.Settings,
+            text = "Settings",
+            onClick = { /* TODO */ }
+        )
+
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
-        ProfileOptionItem(icon = Icons.Default.Notifications, text = "Notifications", onClick = { /* TODO */ })
+
+        ProfileOptionItem(
+            icon = Icons.Default.Notifications,
+            text = "Notifications",
+            onClick = { /* TODO */ }
+        )
+
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
+
         ProfileOptionItem(
             icon = Icons.AutoMirrored.Filled.ExitToApp,
             text = "Log Out",
@@ -96,6 +117,7 @@ fun ProfileScreen(
                 onLogoutComplete()
             }
         )
+
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
     }
 }

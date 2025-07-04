@@ -46,12 +46,13 @@ fun TopBar(
                 AppScreen.CalendarEdit -> Text("Edit Calendar")
                 AppScreen.Login -> {}
                 AppScreen.SignUp -> {}
+                AppScreen.EditProfile -> Text("Edit Profile")
             }
         },
         navigationIcon = {
             when (currentScreen) {
-                AppScreen.Profile, AppScreen.Chat, AppScreen.Program,
-                AppScreen.ProgramEdit, AppScreen.Calendar, AppScreen.CalendarEdit -> {
+                AppScreen.Profile, AppScreen.Chat, AppScreen.Program, AppScreen.ProgramEdit,
+                AppScreen.Calendar, AppScreen.CalendarEdit, AppScreen.EditProfile -> {
 
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -62,8 +63,8 @@ fun TopBar(
         },
         actions = {
             when (currentScreen) {
-                AppScreen.Home, AppScreen.Chat, AppScreen.Program,
-                AppScreen.ProgramEdit, AppScreen.Calendar, AppScreen.CalendarEdit -> {
+                AppScreen.Home, AppScreen.Chat, AppScreen.Program, AppScreen.ProgramEdit,
+                AppScreen.Calendar, AppScreen.CalendarEdit,AppScreen.EditProfile -> {
 
                     val excludedScreens = listOf(AppScreen.Program, AppScreen.ProgramEdit)
                     if (currentScreen !in excludedScreens) {
