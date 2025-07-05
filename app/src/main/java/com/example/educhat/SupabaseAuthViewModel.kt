@@ -56,6 +56,10 @@ class SupabaseAuthViewModel : ViewModel() {
         }
     }
 
+    fun setUserState(state: UserState) {
+        _userState.value = state
+    }
+
     private fun saveTokens(context: Context) {
         viewModelScope.launch {
             val session = SupabaseClient.client.auth.currentSessionOrNull()
@@ -185,7 +189,7 @@ class SupabaseAuthViewModel : ViewModel() {
 
         val bucket = "profile-images"
         val fileName = "profile.png"
-        val path = "${user.id}/$fileName"
+        val path = "${user.id}/$fileName" // 👈 matches your RLS policy!
 
         val bytes = resolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
 
@@ -195,11 +199,12 @@ class SupabaseAuthViewModel : ViewModel() {
             val response: HttpResponse = httpClient.put(url) {
                 header("apikey", BuildConfig.supabaseKey)
                 header("Authorization", "Bearer $token")
-                contentType(ContentType.Image.PNG) // or appropriate type
-                setBody(bytes)  // raw bytes, no multipart needed
+                contentType(ContentType.Image.PNG) // or JPEG if needed
+                setBody(bytes)
             }
 
             if (response.status.isSuccess()) {
+                // 👇 public URL for later display
                 "${BuildConfig.supabaseUrl}/storage/v1/object/public/$bucket/$path"
             } else {
                 null
@@ -207,6 +212,24 @@ class SupabaseAuthViewModel : ViewModel() {
         } catch (e: Exception) {
             Log.e("uploadProfileImage", "Upload failed", e)
             null
+        }
+    }
+
+    fun uploadAndSetProfileImage(uri: Uri, resolver: ContentResolver) {
+        viewModelScope.launch {
+            _userState.value = UserState.Loading
+            val publicUrl = uploadProfileImage(uri, resolver)
+            if (publicUrl != null) {
+                val success = updateProfile(newImageUrl = publicUrl)
+                if (success) {
+                    loadUserProfile()  // Refresh profile so UI shows new image
+                    _userState.value = UserState.Success("Profile image updated successfully!")
+                } else {
+                    _userState.value = UserState.Error("Failed to update profile image URL.")
+                }
+            } else {
+                _userState.value = UserState.Error("Failed to upload image.")
+            }
         }
     }
 

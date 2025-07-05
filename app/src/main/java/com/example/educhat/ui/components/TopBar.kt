@@ -7,7 +7,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -73,36 +72,10 @@ fun TopBar(
                 }
             } else {
                 when (currentScreen) {
-                    AppScreen.Home, AppScreen.Chat, AppScreen.Program, AppScreen.ProgramEdit,
-                    AppScreen.Calendar, AppScreen.CalendarEdit -> {
+                    AppScreen.Home, AppScreen.Calendar, AppScreen.Program, AppScreen.Chat, AppScreen.Profile -> {
 
-                        val excludedScreens = listOf(AppScreen.Program, AppScreen.ProgramEdit)
-                        if (currentScreen !in excludedScreens) {
-                            IconButton(onClick = { onNavigate(AppScreen.Program) }) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.List,
-                                    contentDescription = "Programs"
-                                )
-                            }
-                        }
-
-                        if (currentScreen == AppScreen.Program) {
-                            IconButton(onClick = { onNavigate(AppScreen.ProgramEdit) }) {
-                                Icon(
-                                    imageVector = Icons.Filled.AddCircle,
-                                    contentDescription = "Edit Program"
-                                )
-                            }
-                        }
-
-                        if (currentScreen == AppScreen.Calendar) {
-                            IconButton(onClick = { onNavigate(AppScreen.CalendarEdit) }) {
-                                Icon(
-                                    imageVector = Icons.Filled.AddCircle,
-                                    contentDescription = "Add Calendar"
-                                )
-                            }
-                        } else {
+                        // Show Calendar icon on Home, Profile, Program, Groups
+                        if (currentScreen in listOf(AppScreen.Home, AppScreen.Profile, AppScreen.Program, AppScreen.Chat)) {
                             IconButton(onClick = { onNavigate(AppScreen.Calendar) }) {
                                 Icon(
                                     imageVector = Icons.Filled.CalendarToday,
@@ -111,6 +84,37 @@ fun TopBar(
                             }
                         }
 
+                        if (currentScreen in listOf(AppScreen.Home, AppScreen.Calendar, AppScreen.Program, AppScreen.Chat)) {
+                            IconButton(onClick = { onNavigate(AppScreen.Program) }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.List,
+                                    contentDescription = "Programs"
+                                )
+                            }
+                        }
+
+                        val excludedProfileScreens = listOf(
+                            AppScreen.Login,
+                            AppScreen.SignUp,
+                            AppScreen.Profile,
+                            AppScreen.EditProfile
+                        )
+
+                        if (currentScreen !in excludedProfileScreens) {
+                            IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
+                                Image(
+                                    painter = profileImage,
+                                    contentDescription = "Profile",
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .padding(2.dp)
+                                        .clip(CircleShape)
+                                )
+                            }
+                        }
+                    }
+                    AppScreen.CalendarEdit, AppScreen.ProgramEdit -> {
+                        // Show Profile icon/image on CalendarEdit and ProgramEdit as well
                         IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
                             Image(
                                 painter = profileImage,
@@ -122,8 +126,29 @@ fun TopBar(
                             )
                         }
                     }
-                    AppScreen.Profile, AppScreen.Login, AppScreen.SignUp -> {}
-                    else -> {}
+                    AppScreen.Profile, AppScreen.Login, AppScreen.SignUp -> {
+                    }
+                    else -> {
+                        // Default fallback, show profile if not excluded
+                        val excludedProfileScreens = listOf(
+                            AppScreen.Login,
+                            AppScreen.SignUp,
+                            AppScreen.Profile,
+                            AppScreen.EditProfile
+                        )
+                        if (currentScreen !in excludedProfileScreens) {
+                            IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
+                                Image(
+                                    painter = profileImage,
+                                    contentDescription = "Profile",
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .padding(2.dp)
+                                        .clip(CircleShape)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         },

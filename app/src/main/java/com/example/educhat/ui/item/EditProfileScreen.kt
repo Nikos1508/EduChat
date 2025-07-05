@@ -6,18 +6,22 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -33,12 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.educhat.R
 import com.example.educhat.SupabaseAuthViewModel
+import com.example.educhat.data.model.UserState
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
 import java.io.File
@@ -50,6 +54,8 @@ fun EditProfileScreen(
     navController: NavController,
     onSaveAvailable: (saveAction: () -> Unit) -> Unit
 ) {
+    val userState by viewModel.userState
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val userProfile by viewModel.userProfile
@@ -63,30 +69,24 @@ fun EditProfileScreen(
         description = userProfile?.description ?: ""
     }
 
-    var isEditingName by remember { mutableStateOf(false) }
-    var isEditingDesc by remember { mutableStateOf(false) }
-
     val saveProfileChanges = {
         scope.launch {
-            var uploadedImageUrl: String? = null
+            viewModel.setUserState(UserState.Loading)
+
+            var imageUpdateSuccess = true
 
             if (selectedImageUri != null) {
-                uploadedImageUrl = viewModel.uploadProfileImage(
-                    selectedImageUri!!,
-                    context.contentResolver
-                )
+                viewModel.uploadAndSetProfileImage(selectedImageUri!!, context.contentResolver)
+                selectedImageUri = null // Optional: clear after uploading
             }
 
-            val nameToUpdate = displayName.takeIf { it.isNotBlank() && it != userProfile?.displayName }
-            val descToUpdate = description.takeIf { it.isNotBlank() && it != userProfile?.description }
-
+            // Update display name and description separately
             val success = viewModel.updateProfile(
-                newDisplayName = nameToUpdate,
-                newDescription = descToUpdate,
-                newImageUrl = uploadedImageUrl
+                newDisplayName = displayName.takeIf { it.isNotBlank() },
+                newDescription = description.takeIf { it.isNotBlank() }
             )
 
-            if (success) {
+            if (success && imageUpdateSuccess) {
                 Toast.makeText(context, "Profile updated", Toast.LENGTH_SHORT).show()
                 viewModel.loadUserProfile()
                 navController.popBackStack()
@@ -130,85 +130,60 @@ fun EditProfileScreen(
     }
 
     Column(
-        Modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
-        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
-
-        val imagePainter = rememberAsyncImagePainter(
-            model = selectedImageUri ?: userProfile?.profileImageUrl ?: R.drawable.profile_image
-        )
-
-        Image(
-            painter = imagePainter,
-            contentDescription = "Profile Image",
+        Box(
             modifier = Modifier
                 .size(120.dp)
-                .padding(4.dp)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(onClick = { imagePickerLauncher.launch("image/*") }) {
-            Text("Change Profile Image")
+        ) {
+            val imagePainter = rememberAsyncImagePainter(
+                model = selectedImageUri ?: userProfile?.profileImageUrl ?: R.drawable.profile_image
+            )
+            Image(
+                painter = imagePainter,
+                contentDescription = "Profile Image",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            IconButton(
+                onClick = { imagePickerLauncher.launch("image/*") },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(36.dp)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                    .clip(CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Change Profile Image",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        OutlinedTextField(
+            value = displayName,
+            onValueChange = { displayName = it },
+            label = { Text("Display Name") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Name Section
-        if (isEditingName) {
-            OutlinedTextField(
-                value = displayName,
-                onValueChange = { displayName = it },
-                label = { Text("Display Name") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = { isEditingName = false }) {
-                Text("Done")
-            }
-        } else {
-            Text(
-                text = displayName.ifBlank { "Unknown User" },
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Button(onClick = { isEditingName = true }) {
-                Text("Edit Name")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Description Section
-        if (isEditingDesc) {
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Description") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = { isEditingDesc = false }) {
-                Text("Done")
-            }
-        } else {
-            Text("Description: $description", style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.height(4.dp))
-            Button(onClick = { isEditingDesc = true }) {
-                Text("Edit Description")
-            }
-        }
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Description") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 100.dp),
+            maxLines = 5
+        )
     }
 }

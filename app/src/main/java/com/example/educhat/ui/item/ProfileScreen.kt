@@ -36,7 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.example.educhat.AppScreen
 import com.example.educhat.R
 import com.example.educhat.SupabaseAuthViewModel
@@ -52,29 +51,26 @@ fun ProfileScreen(
     val userEmail by viewModel.currentUserEmail
     val userProfile by viewModel.userProfile
 
+    val imagePainter = rememberAsyncImagePainter(
+        model = userProfile?.profileImageUrl ?: R.drawable.profile_image
+    )
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Show either the remote image or fallback to drawable
         Image(
-            painter = rememberAsyncImagePainter(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(userProfile?.profileImageUrl)
-                    .crossfade(true)
-                    .error(R.drawable.profile_image)
-                    .placeholder(R.drawable.profile_image)
-                    .build()
-            ),
-            contentDescription = "Profile Picture",
+            painter = imagePainter,
+            contentDescription = "Profile picture",
             modifier = Modifier
                 .size(100.dp)
                 .clip(CircleShape)
-                .border(2.dp, Color.Gray, CircleShape),
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, CircleShape),
             contentScale = ContentScale.Crop
         )
-
 
         Spacer(modifier = Modifier.height(16.dp))
 
