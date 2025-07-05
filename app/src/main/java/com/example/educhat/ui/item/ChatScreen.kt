@@ -38,49 +38,39 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.educhat.data.model.Message
+import com.example.educhat.data.network.SupabaseClient.client
 import com.example.educhat.ui.components.MessageItemLeft
-import com.example.educhat.ui.theme.EduChatTheme
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-
-val supabase = createSupabaseClient(
-    supabaseUrl = com.example.educhat.BuildConfig.supabaseUrl,
-    supabaseKey = com.example.educhat.BuildConfig.supabaseKey
-) {
-    install(Postgrest)
-}
-
-@Serializable
-data class Note(
-    val id: Int,
-    val body: String
-)
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun NotesList(modifier: Modifier = Modifier) {
-    var notes by remember { mutableStateOf<List<Note>>(emptyList()) }
+fun ChatScreen(
+    groupId: String,
+    modifier: Modifier = Modifier
+) {
+    var messages by remember { mutableStateOf<List<Message>>(emptyList()) }
+    var newMessage by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
+
+    LaunchedEffect(groupId) {
         try {
-            val result = supabase.from("notes")
-                .select()
-                .decodeList<Note>()
-            notes = result
+            val result = client.from("messages")
+                .select()                 // select all columns
+                .decodeList<Message>()    // get the list from the server
+
+            messages = result.filter { it.group == groupId }  // filter in Kotlin
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
+
     Scaffold(
         bottomBar = {
-            var newNote by remember { mutableStateOf("") }
-            val scope = rememberCoroutineScope()
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -89,8 +79,8 @@ fun NotesList(modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
-                    value = newNote,
-                    onValueChange = { newNote = it },
+                    value = newMessage,
+                    onValueChange = { newMessage = it },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("Type a message...") },
                     shape = RoundedCornerShape(24.dp),
@@ -103,16 +93,16 @@ fun NotesList(modifier: Modifier = Modifier) {
                                 imageVector = Icons.Filled.Image,
                                 contentDescription = "Add Image",
                                 modifier = Modifier
-                                    .clickable {  }
+                                    .clickable { /* TODO */ }
                                     .padding(start = 6.dp)
                                     .size(30.dp),
                                 tint = Color.Gray
                             )
                             Icon(
                                 imageVector = Icons.Filled.EmojiEmotions,
-                                contentDescription = "Add Sticker",
+                                contentDescription = "Add Emoji",
                                 modifier = Modifier
-                                    .clickable {  }
+                                    .clickable { /* TODO */ }
                                     .padding(end = 6.dp)
                                     .size(30.dp),
                                 tint = Color.Gray
@@ -121,10 +111,10 @@ fun NotesList(modifier: Modifier = Modifier) {
                     },
                     singleLine = false,
                     colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.background,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                            disabledContainerColor = MaterialTheme.colorScheme.background
-                        )
+                        focusedContainerColor = MaterialTheme.colorScheme.background,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                        disabledContainerColor = MaterialTheme.colorScheme.background
+                    )
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))
@@ -133,13 +123,21 @@ fun NotesList(modifier: Modifier = Modifier) {
                     onClick = {
                         scope.launch {
                             try {
-                                val note = supabase.from("notes").insert(mapOf("body" to newNote)) {
+                                val user = client.auth.currentUserOrNull() ?: return@launch
+
+                                val insertedMessage = client.from("messages").insert(
+                                    mapOf(
+                                        "group" to groupId,
+                                        "content" to newMessage,
+                                        "sender" to user.id
+                                    )
+                                ) {
                                     select()
                                     single()
-                                }.decodeAs<Note>()
+                                }.decodeAs<Message>()
 
-                                notes = notes + note
-                                newNote = ""
+                                messages = messages + insertedMessage
+                                newMessage = ""
                             } catch (e: Exception) {
                                 e.printStackTrace()
                             }
@@ -158,33 +156,12 @@ fun NotesList(modifier: Modifier = Modifier) {
             contentPadding = innerPadding,
             modifier = Modifier.fillMaxSize()
         ) {
-            items(notes, key = { it.id }) { note ->
+            items(messages, key = { it.id }) { message ->
                 MessageItemLeft(
-                    text = note.body,
+                    message = message,
                     modifier = Modifier.animateItemPlacement()
                 )
             }
         }
-    }
-}
-
-@Composable
-fun ChatScreen(modifier: Modifier = Modifier) {
-    NotesList(modifier = modifier)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MessagePreviewLight() {
-    EduChatTheme {
-        ChatScreen(modifier = Modifier.padding(4.dp))
-    }
-}
-
-@Preview
-@Composable
-fun MessagePreviewDark() {
-    EduChatTheme(darkTheme = true) {
-        ChatScreen(modifier = Modifier.padding(4.dp))
     }
 }

@@ -122,7 +122,8 @@ fun EduChatApp() {
                     currentScreen = currentScreen,
                     onNavigate = { screen -> navController.navigate(screen.name) },
                     onBack = { navController.popBackStack() },
-                    onSave = if (currentScreen == AppScreen.EditProfile) editProfileSaveAction else null
+                    onSave = if (currentScreen == AppScreen.EditProfile) editProfileSaveAction else null,
+                    profileImageUrl = viewModel.userProfile.value?.profileImageUrl
                 )
             }
         }
@@ -187,16 +188,10 @@ fun EduChatApp() {
                     onSaveAvailable = { saveAction -> editProfileSaveAction = saveAction }
                 )
             }
-            composable(AppScreen.Chat.name + "/{groupName}") { backStackEntry ->
-                val groupName = backStackEntry.arguments?.getString("groupName")
+            composable(route = AppScreen.Chat.name + "/{groupName}") { backStackEntry ->
+                val groupName = backStackEntry.arguments?.getString("groupName") ?: ""
                 ChatScreen(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp)
-                )
-            }
-            composable(AppScreen.Chat.name) {
-                ChatScreen(
+                    groupId = groupName,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(8.dp)

@@ -142,11 +142,12 @@ fun EditProfileScreen(
             val imagePainter = rememberAsyncImagePainter(
                 model = selectedImageUri ?: userProfile?.profileImageUrl ?: R.drawable.profile_image
             )
+
             Image(
-                painter = imagePainter,
-                contentDescription = "Profile Image",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+            painter = imagePainter,
+            contentDescription = "Profile Image",
+            modifier = Modifier.fillMaxSize().clip(MaterialTheme.shapes.small),
+            contentScale = ContentScale.Crop
             )
             IconButton(
                 onClick = { imagePickerLauncher.launch("image/*") },

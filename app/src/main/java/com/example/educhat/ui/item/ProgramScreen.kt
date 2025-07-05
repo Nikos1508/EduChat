@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.educhat.data.model.Program
+import com.example.educhat.data.network.SupabaseClient.client
 import com.example.educhat.ui.theme.EduChatTheme
 import io.github.jan.supabase.postgrest.from
 
@@ -52,7 +53,7 @@ fun ProgramScreen() {
 
     LaunchedEffect(Unit) {
         try {
-            val programs = supabase.from("programs")
+            val programs = client.from("programs")
                 .select()
                 .decodeList<Program>()
 

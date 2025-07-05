@@ -17,10 +17,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.educhat.AppScreen
 import com.example.educhat.R
 import com.example.educhat.ui.theme.EduChatTheme
@@ -31,10 +33,17 @@ fun TopBar(
     currentScreen: AppScreen,
     onNavigate: (AppScreen) -> Unit,
     onBack: () -> Unit,
-    onSave: (() -> Unit)? = null,  // Optional save callback
-    ChatName: String? = null
+    onSave: (() -> Unit)? = null,
+    ChatName: String? = null,
+    profileImageUrl: String? = null
 ) {
-    val profileImage = painterResource(R.drawable.profile_image)
+    val profilePainter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(profileImageUrl ?: R.drawable.profile_image)
+            .crossfade(true)
+            .error(R.drawable.profile_image)
+            .build()
+    )
 
     TopAppBar(
         title = {
@@ -84,7 +93,7 @@ fun TopBar(
                             }
                         }
 
-                        if (currentScreen in listOf(AppScreen.Home, AppScreen.Calendar, AppScreen.Program, AppScreen.Chat)) {
+                        if (currentScreen in listOf(AppScreen.Home, AppScreen.Calendar, AppScreen.Program, AppScreen.Chat, AppScreen.Profile)) {
                             IconButton(onClick = { onNavigate(AppScreen.Program) }) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.List,
@@ -103,7 +112,7 @@ fun TopBar(
                         if (currentScreen !in excludedProfileScreens) {
                             IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
                                 Image(
-                                    painter = profileImage,
+                                    painter = profilePainter,
                                     contentDescription = "Profile",
                                     modifier = Modifier
                                         .size(40.dp)
@@ -117,7 +126,7 @@ fun TopBar(
                         // Show Profile icon/image on CalendarEdit and ProgramEdit as well
                         IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
                             Image(
-                                painter = profileImage,
+                                painter = profilePainter,
                                 contentDescription = "Profile",
                                 modifier = Modifier
                                     .size(40.dp)
@@ -139,7 +148,7 @@ fun TopBar(
                         if (currentScreen !in excludedProfileScreens) {
                             IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
                                 Image(
-                                    painter = profileImage,
+                                    painter = profilePainter,
                                     contentDescription = "Profile",
                                     modifier = Modifier
                                         .size(40.dp)

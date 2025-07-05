@@ -16,13 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.educhat.R
-import com.example.educhat.ui.theme.EduChatTheme
+import com.example.educhat.data.model.Message
 
 @Composable
-fun MessageItemLeft(text: String, modifier: Modifier = Modifier, ) {
+fun MessageItemLeft(message: Message, modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(4.dp)) {
         Card(
             shape = RoundedCornerShape(
@@ -31,8 +30,7 @@ fun MessageItemLeft(text: String, modifier: Modifier = Modifier, ) {
                 bottomEnd = 18.dp,
                 bottomStart = 2.dp
             ),
-            modifier = Modifier
-                .padding(start = 44.dp)
+            modifier = Modifier.padding(start = 44.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -41,7 +39,7 @@ fun MessageItemLeft(text: String, modifier: Modifier = Modifier, ) {
                     .widthIn(max = 400.dp)
             ) {
                 Text(
-                    text = text,
+                    text = message.content,
                     textAlign = TextAlign.Justify,
                     modifier = Modifier.wrapContentWidth()
                 )
@@ -57,21 +55,5 @@ fun MessageItemLeft(text: String, modifier: Modifier = Modifier, ) {
                 .size(40.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MessageItemLeftPreviewLight() {
-    EduChatTheme(darkTheme = false) {
-        MessageItemLeft(text = "Test Light", modifier = Modifier.padding(4.dp))
-    }
-}
-
-@Preview
-@Composable
-fun MessageItemLeftPreviewDark() {
-    EduChatTheme(darkTheme = true) {
-        MessageItemLeft(text = "Test Dark", modifier = Modifier.padding(4.dp))
     }
 }

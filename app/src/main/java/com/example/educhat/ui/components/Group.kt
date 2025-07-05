@@ -17,11 +17,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.educhat.data.model.Group
 
 @Composable
 fun GroupItem(
-    group: Group,
+    groupTitle: String,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -44,7 +43,7 @@ fun GroupItem(
             Spacer(modifier = Modifier.width(12.dp))
 
             Text(
-                text = group.title,
+                text = groupTitle,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )

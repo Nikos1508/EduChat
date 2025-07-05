@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,9 +25,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.educhat.data.Groups
-import com.example.educhat.data.model.Group
+import com.example.educhat.data.model.Message
+import com.example.educhat.data.network.SupabaseClient.client
 import com.example.educhat.ui.components.GroupItem
+import io.github.jan.supabase.postgrest.from
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,14 +68,27 @@ fun SearchBar(
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    onGroupClick: () -> Unit
+    onGroupClick: (String) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    val allGroups = Groups().loadGroups()
+    var groups by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        try {
+            val messages = client.from("messages")
+                .select()
+                .decodeList<Message>()
+            println("Fetched messages: $messages")
+            groups = messages.map { it.group }.distinct()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     val filteredGroups = if (searchQuery.isEmpty()) {
-        allGroups
+        groups
     } else {
-        allGroups.filter { it.title.contains(searchQuery, ignoreCase = true) }
+        groups.filter { it.contains(searchQuery, ignoreCase = true) }
     }
 
     Column(modifier = modifier.padding(4.dp)) {
@@ -91,20 +106,21 @@ fun HomeScreen(
 
 @Composable
 fun GroupList(
-    groupList: List<Group>,
+    groupList: List<String>,
     modifier: Modifier = Modifier,
-    onGroupClick: () -> Unit
+    onGroupClick: (String) -> Unit
 ) {
     LazyColumn(modifier = modifier) {
-        items(groupList) { group ->
+        items(groupList) { groupName ->
             GroupItem(
-                group = group,
+                groupTitle = groupName,
                 modifier = Modifier.padding(8.dp),
-                onClick = onGroupClick
+                onClick = { onGroupClick(groupName) }
             )
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
