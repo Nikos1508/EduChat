@@ -6,16 +6,34 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
@@ -29,7 +47,8 @@ import java.io.File
 @Composable
 fun EditProfileScreen(
     viewModel: SupabaseAuthViewModel,
-    navController: NavController
+    navController: NavController,
+    onSaveAvailable: (saveAction: () -> Unit) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -46,6 +65,44 @@ fun EditProfileScreen(
 
     var isEditingName by remember { mutableStateOf(false) }
     var isEditingDesc by remember { mutableStateOf(false) }
+
+    val saveProfileChanges = {
+        scope.launch {
+            var uploadedImageUrl: String? = null
+
+            if (selectedImageUri != null) {
+                uploadedImageUrl = viewModel.uploadProfileImage(
+                    selectedImageUri!!,
+                    context.contentResolver
+                )
+            }
+
+            val nameToUpdate = displayName.takeIf { it.isNotBlank() && it != userProfile?.displayName }
+            val descToUpdate = description.takeIf { it.isNotBlank() && it != userProfile?.description }
+
+            val success = viewModel.updateProfile(
+                newDisplayName = nameToUpdate,
+                newDescription = descToUpdate,
+                newImageUrl = uploadedImageUrl
+            )
+
+            if (success) {
+                Toast.makeText(context, "Profile updated", Toast.LENGTH_SHORT).show()
+                viewModel.loadUserProfile()
+                navController.popBackStack()
+            } else {
+                Toast.makeText(context, "Failed to update profile", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        onSaveAvailable {
+            scope.launch {
+                saveProfileChanges()
+            }
+        }
+    }
 
     val cropLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -73,13 +130,12 @@ fun EditProfileScreen(
     }
 
     Column(
-        modifier = Modifier
+        Modifier
             .fillMaxSize()
             .padding(24.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Edit Profile", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
 
         val imagePainter = rememberAsyncImagePainter(
@@ -104,7 +160,7 @@ fun EditProfileScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // --- Name Section ---
+        // Name Section
         if (isEditingName) {
             OutlinedTextField(
                 value = displayName,
@@ -119,7 +175,12 @@ fun EditProfileScreen(
                 Text("Done")
             }
         } else {
-            Text("Name: $displayName", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = displayName.ifBlank { "Unknown User" },
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(modifier = Modifier.height(4.dp))
             Button(onClick = { isEditingName = true }) {
                 Text("Edit Name")
@@ -128,7 +189,7 @@ fun EditProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- Description Section ---
+        // Description Section
         if (isEditingDesc) {
             OutlinedTextField(
                 value = description,
@@ -148,43 +209,6 @@ fun EditProfileScreen(
             Button(onClick = { isEditingDesc = true }) {
                 Text("Edit Description")
             }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = {
-                scope.launch {
-                    var uploadedImageUrl: String? = null
-
-                    if (selectedImageUri != null) {
-                        uploadedImageUrl = viewModel.uploadProfileImage(
-                            selectedImageUri!!,
-                            context.contentResolver
-                        )
-                    }
-
-                    val nameToUpdate = if (displayName != userProfile?.displayName) displayName else null
-                    val descToUpdate = if (description != userProfile?.description) description else null
-
-                    val success = viewModel.updateProfile(
-                        newDisplayName = nameToUpdate
-                        newDescription = descToUpdate,
-                        newImageUrl = uploadedImageUrl
-                    )
-
-                    if (success) {
-                        Toast.makeText(context, "Profile updated", Toast.LENGTH_SHORT).show()
-                        viewModel.loadUserProfile()
-                        navController.popBackStack()
-                    } else {
-                        Toast.makeText(context, "Failed to update profile", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Save Changes")
         }
     }
 }

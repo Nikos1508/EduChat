@@ -3,6 +3,7 @@ package com.example.educhat.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
@@ -11,8 +12,8 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.educhat.AppScreen
 import com.example.educhat.R
 import com.example.educhat.ui.theme.EduChatTheme
@@ -30,6 +32,7 @@ fun TopBar(
     currentScreen: AppScreen,
     onNavigate: (AppScreen) -> Unit,
     onBack: () -> Unit,
+    onSave: (() -> Unit)? = null,  // Optional save callback
     ChatName: String? = null
 ) {
     val profileImage = painterResource(R.drawable.profile_image)
@@ -53,7 +56,6 @@ fun TopBar(
             when (currentScreen) {
                 AppScreen.Profile, AppScreen.Chat, AppScreen.Program, AppScreen.ProgramEdit,
                 AppScreen.Calendar, AppScreen.CalendarEdit, AppScreen.EditProfile -> {
-
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
@@ -62,57 +64,67 @@ fun TopBar(
             }
         },
         actions = {
-            when (currentScreen) {
-                AppScreen.Home, AppScreen.Chat, AppScreen.Program, AppScreen.ProgramEdit,
-                AppScreen.Calendar, AppScreen.CalendarEdit,AppScreen.EditProfile -> {
-
-                    val excludedScreens = listOf(AppScreen.Program, AppScreen.ProgramEdit)
-                    if (currentScreen !in excludedScreens) {
-                        IconButton(onClick = { onNavigate(AppScreen.Program) }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.List,
-                                contentDescription = "Programs"
-                            )
-                        }
-                    }
-
-                    if (currentScreen == AppScreen.Program) {
-                        IconButton(onClick = { onNavigate(AppScreen.ProgramEdit) }) {
-                            Icon(
-                                imageVector = Icons.Filled.AddCircle,
-                                contentDescription = "Edit Program"
-                            )
-                        }
-                    }
-
-                    if (currentScreen == AppScreen.Calendar) {
-                        IconButton(onClick = { onNavigate(AppScreen.CalendarEdit) }) {
-                            Icon(
-                                imageVector = Icons.Filled.AddCircle,
-                                contentDescription = "Add Calendar"
-                            )
-                        }
-                    } else {
-                        IconButton(onClick = { onNavigate(AppScreen.Calendar) }) {
-                            Icon(
-                                imageVector = Icons.Default.CalendarToday,
-                                contentDescription = "Calendar"
-                            )
-                        }
-                    }
-
-                    IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
-                        Image(
-                            painter = profileImage,
-                            contentDescription = "Profile",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .padding(2.dp)
-                                .clip(MaterialTheme.shapes.extraLarge)
-                        )
-                    }
+            if (onSave != null) {
+                TextButton(onClick = onSave) {
+                    Text(
+                        "Save",
+                        fontSize = 18.sp
+                    )
                 }
-                AppScreen.Profile, AppScreen.Login, AppScreen.SignUp -> {}
+            } else {
+                when (currentScreen) {
+                    AppScreen.Home, AppScreen.Chat, AppScreen.Program, AppScreen.ProgramEdit,
+                    AppScreen.Calendar, AppScreen.CalendarEdit -> {
+
+                        val excludedScreens = listOf(AppScreen.Program, AppScreen.ProgramEdit)
+                        if (currentScreen !in excludedScreens) {
+                            IconButton(onClick = { onNavigate(AppScreen.Program) }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.List,
+                                    contentDescription = "Programs"
+                                )
+                            }
+                        }
+
+                        if (currentScreen == AppScreen.Program) {
+                            IconButton(onClick = { onNavigate(AppScreen.ProgramEdit) }) {
+                                Icon(
+                                    imageVector = Icons.Filled.AddCircle,
+                                    contentDescription = "Edit Program"
+                                )
+                            }
+                        }
+
+                        if (currentScreen == AppScreen.Calendar) {
+                            IconButton(onClick = { onNavigate(AppScreen.CalendarEdit) }) {
+                                Icon(
+                                    imageVector = Icons.Filled.AddCircle,
+                                    contentDescription = "Add Calendar"
+                                )
+                            }
+                        } else {
+                            IconButton(onClick = { onNavigate(AppScreen.Calendar) }) {
+                                Icon(
+                                    imageVector = Icons.Filled.CalendarToday,
+                                    contentDescription = "Calendar"
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
+                            Image(
+                                painter = profileImage,
+                                contentDescription = "Profile",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .padding(2.dp)
+                                    .clip(CircleShape)
+                            )
+                        }
+                    }
+                    AppScreen.Profile, AppScreen.Login, AppScreen.SignUp -> {}
+                    else -> {}
+                }
             }
         },
         modifier = Modifier.padding(2.dp)
@@ -212,6 +224,19 @@ fun TopBarPreviewCalendar() {
             currentScreen = AppScreen.Calendar,
             onNavigate = {},
             onBack = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TopBarPreviewEditProfile() {
+    EduChatTheme {
+        TopBar(
+            currentScreen = AppScreen.EditProfile,
+            onNavigate = {},
+            onBack = {},
+            onSave = {}
         )
     }
 }

@@ -77,6 +77,16 @@ class SupabaseAuthViewModel : ViewModel() {
         _currentUserEmail.value = user?.email
     }
 
+    suspend fun ensureUserProfileExists(): Boolean {
+        val user = SupabaseClient.client.auth.currentUserOrNull() ?: return false
+        val profile = profileRepository.getUserProfile(user.id)
+        return if (profile == null) {
+            createProfile(user.email ?: "Unknown")
+        } else {
+            true
+        }
+    }
+
     suspend fun refreshSessionManually(context: Context): Boolean = withContext(Dispatchers.IO) {
         val sharedPref = SharedPreferenceHelper(context)
         val refreshToken = sharedPref.getStringData("refreshToken")
@@ -148,8 +158,8 @@ class SupabaseAuthViewModel : ViewModel() {
         val token = SupabaseClient.client.auth.currentSessionOrNull()?.accessToken ?: return false
 
         val body = buildJsonObject {
-            put("display_name", newDisplayName)
-            put("description", newDescription)
+            newDisplayName?.takeIf { it.isNotBlank() }?.let { put("display_name", it) }
+            newDescription?.takeIf { it.isNotBlank() }?.let { put("description", it) }
             newImageUrl?.let { put("profile_image_url", it) }
         }
 
@@ -237,10 +247,17 @@ class SupabaseAuthViewModel : ViewModel() {
                     email = userEmail
                     password = userPassword
                 }
+                val profileCreated = ensureUserProfileExists()
+
                 saveTokens(context)
                 loadCurrentUserEmail()
                 loadUserProfile()
-                _userState.value = UserState.Success("Logged in successfully!")
+
+                if (profileCreated) {
+                    _userState.value = UserState.Success("Logged in successfully!")
+                } else {
+                    _userState.value = UserState.Error("Failed to create user profile.")
+                }
             } catch (e: Exception) {
                 val errorMessage = when (e) {
                     is RestException -> e.error ?: "Login failed. Invalid credentials or server error."
@@ -272,7 +289,14 @@ class SupabaseAuthViewModel : ViewModel() {
             _userState.value = UserState.Loading
             val success = refreshSessionManually(context)
             if (success) {
-                loadUserProfile()
+                val profileExists = ensureUserProfileExists()
+
+                if (profileExists) {
+                    loadUserProfile()
+                    _userState.value = UserState.Success("User logged in!")
+                } else {
+                    _userState.value = UserState.Error("Failed to create user profile.")
+                }
             } else {
                 clearTokens(context)
                 _currentUserEmail.value = null

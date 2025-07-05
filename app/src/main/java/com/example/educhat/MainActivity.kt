@@ -9,7 +9,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -73,6 +75,8 @@ fun EduChatApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    var editProfileSaveAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
     val currentScreen = remember(currentRoute) {
         currentRoute?.let { routeName ->
             try {
@@ -117,7 +121,8 @@ fun EduChatApp() {
                 TopBar(
                     currentScreen = currentScreen,
                     onNavigate = { screen -> navController.navigate(screen.name) },
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onSave = if (currentScreen == AppScreen.EditProfile) editProfileSaveAction else null
                 )
             }
         }
@@ -177,8 +182,9 @@ fun EduChatApp() {
             }
             composable(AppScreen.EditProfile.name) {
                 EditProfileScreen(
-                    viewModel = viewModel(),
-                    navController = navController
+                    viewModel = viewModel,
+                    navController = navController,
+                    onSaveAvailable = { saveAction -> editProfileSaveAction = saveAction }
                 )
             }
             composable(AppScreen.Chat.name + "/{groupName}") { backStackEntry ->
