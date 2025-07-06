@@ -1,7 +1,5 @@
 package com.example.educhat.ui.item
 
-import android.Manifest
-import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -72,23 +70,18 @@ fun SignUpScreen(
         if (signUpAttemptMade) {
             when (userStateValue) {
                 is UserState.Success -> {
-                    if (userStateValue.message == "Registered successfully!") {
-                        Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-
-                        signUpAttemptMade = false
-                        onSignUpComplete()
+                    Toast.makeText(context, userStateValue.message, Toast.LENGTH_LONG).show()
+                    if (userStateValue.message.contains("Check your email")) {
+                        onSignUpComplete()  // This should navigate to login
                     }
+                    signUpAttemptMade = false
                 }
                 is UserState.Error -> {
                     Toast.makeText(context, "Sign Up Failed: ${userStateValue.message}", Toast.LENGTH_LONG).show()
                     signUpAttemptMade = false
                 }
                 UserState.Loading -> {
-                    // Loading indicator shown in button
+
                 }
             }
         }
@@ -254,7 +247,9 @@ fun SignUpScreen(
                 onClick = {
                     if (email.isNotBlank() && password.isNotBlank() && displayName.isNotBlank() ) {
                         signUpAttemptMade = true
-                        viewModel.signUp(context, email, password, displayName)
+                        viewModel.signUp(context, email, password, displayName) {
+                            onBackToLogin()
+                        }
                     } else {
                         Toast.makeText(context, "All fields must be filled", Toast.LENGTH_SHORT).show()
                     }

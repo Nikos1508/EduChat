@@ -233,15 +233,26 @@ class SupabaseAuthViewModel : ViewModel() {
         }
     }
 
-    fun signUp(context: Context, userEmail: String, userPassword: String, displayName: String) {
+    fun signUp(context: Context, userEmail: String, userPassword: String, displayName: String, onNavigateToLogin: () -> Unit) {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
-                SupabaseClient.client.auth.signUpWith(io.github.jan.supabase.auth.providers.builtin.Email) {
+                val result = SupabaseClient.client.auth.signUpWith(io.github.jan.supabase.auth.providers.builtin.Email) {
                     email = userEmail
                     password = userPassword
                 }
 
+                val user = SupabaseClient.client.auth.currentUserOrNull()
+                val emailConfirmed = user?.emailConfirmedAt != null
+
+                if (!emailConfirmed) {
+                    // Don't create profile yet, wait for email confirmation
+                    _userState.value = UserState.Success("Check your email to confirm your account.")
+                    onNavigateToLogin()
+                    return@launch
+                }
+
+                // If email confirmed (usually rare on signup), create profile now
                 val success = createProfile(displayName)
                 if (!success) {
                     _userState.value = UserState.Error("Failed to create user profile.")
@@ -251,6 +262,8 @@ class SupabaseAuthViewModel : ViewModel() {
                 saveTokens(context)
                 loadCurrentUserEmail()
                 _userState.value = UserState.Success("Registered successfully!")
+                onNavigateToLogin()
+
             } catch (e: Exception) {
                 val errorMessage = when (e) {
                     is RestException -> e.error ?: "Registration failed. Server error."
@@ -261,6 +274,7 @@ class SupabaseAuthViewModel : ViewModel() {
             }
         }
     }
+
 
     fun login(context: Context, userEmail: String, userPassword: String) {
         viewModelScope.launch {
