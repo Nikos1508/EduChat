@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import com.example.educhat.data.model.Message
 import com.example.educhat.data.network.SupabaseClient.client
 import com.example.educhat.ui.components.MessageItemLeft
+import com.example.educhat.ui.components.MessageItemRight
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
@@ -57,6 +58,10 @@ fun ChatScreen(
     var newMessage by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
+    // Get the current user ID once (null if not logged in)
+    val currentUserId = remember {
+        client.auth.currentUserOrNull()?.id
+    }
 
     LaunchedEffect(groupId) {
         try {
@@ -162,10 +167,17 @@ fun ChatScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             items(messages, key = { it.id }) { message ->
-                MessageItemLeft(
-                    message = message,
-                    modifier = Modifier.animateItemPlacement()
-                )
+                if (message.sender == currentUserId) {
+                    MessageItemRight(
+                        message = message,
+                        modifier = Modifier.animateItemPlacement()
+                    )
+                } else {
+                    MessageItemLeft(
+                        message = message,
+                        modifier = Modifier.animateItemPlacement()
+                    )
+                }
             }
         }
     }
