@@ -25,7 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.educhat.data.model.Message
+import com.example.educhat.data.model.Group
 import com.example.educhat.data.network.SupabaseClient.client
 import com.example.educhat.ui.components.GroupItem
 import io.github.jan.supabase.postgrest.from
@@ -75,20 +75,21 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         try {
-            val messages = client.from("messages")
+            val groupsList = client.from("groups")
                 .select()
-                .decodeList<Message>()
-            println("Fetched messages: $messages")
-            groups = messages.map { it.group }.distinct()
+                .decodeList<Group>()
+
+            println("Fetched groups: $groupsList")
+            groups = groupsList.map { it.group }
+            println("Mapped groups: $groups")
+
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    val filteredGroups = if (searchQuery.isEmpty()) {
-        groups
-    } else {
-        groups.filter { it.contains(searchQuery, ignoreCase = true) }
+    val filteredGroups = if (searchQuery.isEmpty()) groups else groups.filter {
+        it.contains(searchQuery, ignoreCase = true)
     }
 
     Column(modifier = modifier.padding(4.dp)) {

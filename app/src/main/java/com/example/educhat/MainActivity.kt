@@ -162,8 +162,8 @@ fun EduChatApp() {
             composable(AppScreen.Home.name) {
                 HomeScreen(
                     modifier = Modifier.fillMaxSize(),
-                    onGroupClick = {
-                        navController.navigate(AppScreen.Chat.name)
+                    onGroupClick = { groupName ->
+                        navController.navigate(AppScreen.Chat.name + "/$groupName")
                     }
                 )
             }

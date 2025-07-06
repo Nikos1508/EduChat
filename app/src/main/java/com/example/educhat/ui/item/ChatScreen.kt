@@ -1,5 +1,6 @@
 package com.example.educhat.ui.item
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -60,10 +61,10 @@ fun ChatScreen(
     LaunchedEffect(groupId) {
         try {
             val result = client.from("messages")
-                .select()                 // select all columns
-                .decodeList<Message>()    // get the list from the server
+                .select()
+                .decodeList<Message>()
 
-            messages = result.filter { it.group == groupId }  // filter in Kotlin
+            messages = result.filter { it.group == groupId }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -123,7 +124,11 @@ fun ChatScreen(
                     onClick = {
                         scope.launch {
                             try {
-                                val user = client.auth.currentUserOrNull() ?: return@launch
+                                val user = client.auth.currentUserOrNull()
+                                if (user == null) {
+                                    Log.e("ChatScreen", "No user logged in")
+                                    return@launch
+                                }
 
                                 val insertedMessage = client.from("messages").insert(
                                     mapOf(
