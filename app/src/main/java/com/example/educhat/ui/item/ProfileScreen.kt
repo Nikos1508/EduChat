@@ -16,15 +16,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +56,8 @@ fun ProfileScreen(
     val userEmail by viewModel.currentUserEmail
     val userProfile by viewModel.userProfile
 
+    var showResetPasswordDialog by remember { mutableStateOf(false) }
+
     val imagePainter = rememberAsyncImagePainter(
         model = userProfile?.profileImageUrl ?: R.drawable.profile_image
     )
@@ -61,7 +68,6 @@ fun ProfileScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Show either the remote image or fallback to drawable
         Image(
             painter = imagePainter,
             contentDescription = "Profile picture",
@@ -100,17 +106,19 @@ fun ProfileScreen(
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
 
         ProfileOptionItem(
-            icon = Icons.Default.Settings,
-            text = "Settings",
+            icon = Icons.Default.Notifications,
+            text = "Notifications",
             onClick = { /* TODO */ }
         )
 
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
 
         ProfileOptionItem(
-            icon = Icons.Default.Notifications,
-            text = "Notifications",
-            onClick = { /* TODO */ }
+            icon = Icons.Default.LockReset,
+            text = "Reset Password",
+            onClick = {
+                showResetPasswordDialog = true
+            }
         )
 
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
@@ -127,6 +135,41 @@ fun ProfileScreen(
 
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
     }
+    if (showResetPasswordDialog) {
+        ResetPasswordConfirmationDialog(
+            onConfirm = {
+                showResetPasswordDialog = false
+                userEmail?.let {
+                    viewModel.sendPasswordResetEmail(context, it)
+                } ?: Toast.makeText(context, "No email found", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = {
+                showResetPasswordDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun ResetPasswordConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+    ) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Reset Password") },
+        text = { Text("Are you sure you want to send a password reset email?") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Yes")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("No")
+            }
+        }
+    )
 }
 
 @Composable

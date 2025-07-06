@@ -1,6 +1,9 @@
 package com.example.educhat
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,14 +39,44 @@ import com.example.educhat.ui.theme.EduChatTheme
 import com.jakewharton.threetenabp.AndroidThreeTen
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         AndroidThreeTen.init(this)
 
+        handleDeepLink(intent)
+
+        startApp()
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        intent?.let { handleDeepLink(it) }
+    }
+
+    private fun startApp() {
         setContent {
             EduChatTheme {
                 EduChatApp()
+            }
+        }
+    }
+
+    private fun handleDeepLink(intent: Intent) {
+        val data: Uri? = intent.data
+        val fragment = data?.fragment
+
+        if (data?.host == "reset-password" && fragment != null) {
+            val token = fragment
+                .split("&")
+                .firstOrNull { it.startsWith("access_token=") }
+                ?.substringAfter("access_token=")
+
+            token?.let {
+                SupabaseAuthViewModel.resetToken = it
+
+                Log.d("MainActivity", "Got reset token: $it")
             }
         }
     }

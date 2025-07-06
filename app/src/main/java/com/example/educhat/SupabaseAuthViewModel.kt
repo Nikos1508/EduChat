@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -54,6 +55,10 @@ class SupabaseAuthViewModel : ViewModel() {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }
+    }
+
+    companion object {
+        var resetToken: String? = null
     }
 
     fun setUserState(state: UserState) {
@@ -317,6 +322,20 @@ class SupabaseAuthViewModel : ViewModel() {
                 _userState.value = UserState.Success("Logged out successfully!")
             } catch (e: Exception) {
                 _userState.value = UserState.Error(e.message ?: "Logout failed.")
+            }
+        }
+    }
+
+    fun sendPasswordResetEmail(context: Context, email: String) {
+        viewModelScope.launch {
+            _userState.value = UserState.Loading
+            try {
+                SupabaseClient.client.auth.resetPasswordForEmail(email)
+                _userState.value = UserState.Success("Password reset email sent. Check your inbox.")
+                Toast.makeText(context, "Password reset email sent. Check your inbox.", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                _userState.value = UserState.Error(e.localizedMessage ?: "Unknown error")
+                Toast.makeText(context, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             }
         }
     }
