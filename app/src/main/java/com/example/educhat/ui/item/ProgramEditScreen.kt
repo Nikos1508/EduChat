@@ -31,11 +31,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.educhat.ProgramViewModel
+import com.example.educhat.R
 import com.example.educhat.data.model.Program
 
 @Composable
@@ -76,7 +78,7 @@ fun ProgramEditScreen(navController: NavController, viewModel: ProgramViewModel 
     ) {
 
         Text(
-            "Add New Program",
+            stringResource(R.string.add_new_program),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary
         )
@@ -88,21 +90,21 @@ fun ProgramEditScreen(navController: NavController, viewModel: ProgramViewModel 
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             DropdownPicker(
-                label = "Grade",
+                label = stringResource(R.string.grade),
                 options = gradeOptions,
                 selectedOption = selectedGrade,
                 onOptionSelected = { selectedGrade = it },
                 optionLabel = { it }
             )
             DropdownPicker(
-                label = "Class",
+                label = stringResource(R.string.class_label),
                 options = classOptions,
                 selectedOption = selectedClass,
                 onOptionSelected = { selectedClass = it },
                 optionLabel = { it }
             )
             DropdownPicker(
-                label = "Hour",
+                label = stringResource(R.string.hour),
                 options = hourOptions,
                 selectedOption = selectedHour,
                 onOptionSelected = { selectedHour = it },
@@ -147,7 +149,7 @@ fun ProgramEditScreen(navController: NavController, viewModel: ProgramViewModel 
             modifier = Modifier.align(Alignment.End),
             enabled = isFormValid
         ) {
-            Text("Add")
+            Text(stringResource(R.string.add))
         }
 
         Spacer(Modifier.height(16.dp))
@@ -155,7 +157,7 @@ fun ProgramEditScreen(navController: NavController, viewModel: ProgramViewModel 
         OutlinedTextField(
             value = filterText,
             onValueChange = { filterText = it },
-            label = { Text("Filter by subject") },
+            label = { Text(stringResource(R.string.filter_by_subject)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp),
@@ -163,7 +165,7 @@ fun ProgramEditScreen(navController: NavController, viewModel: ProgramViewModel 
         )
 
         Text(
-            text = "Preview",
+            text = stringResource(R.string.preview),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -176,7 +178,7 @@ fun ProgramEditScreen(navController: NavController, viewModel: ProgramViewModel 
             selectedPrograms.forEach { ProgramItem(it) }
         } else {
             Text(
-                text = "No program for Grade $grade - Class $classNum",
+                text = stringResource(R.string.no_program_for_grade_class, grade, classNum),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(8.dp)
             )

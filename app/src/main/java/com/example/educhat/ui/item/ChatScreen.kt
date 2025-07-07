@@ -1,6 +1,5 @@
 package com.example.educhat.ui.item
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,7 +38,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.educhat.R
 import com.example.educhat.data.model.Message
 import com.example.educhat.data.model.UserProfile
 import com.example.educhat.data.network.SupabaseClient.client
@@ -62,7 +62,6 @@ fun ChatScreen(
 
     val userProfiles = remember { mutableStateMapOf<String, UserProfile>() }
 
-    // Get the current user ID once (null if not logged in)
     val currentUserId = remember {
         client.auth.currentUserOrNull()?.id
     }
@@ -112,7 +111,7 @@ fun ChatScreen(
                     value = newMessage,
                     onValueChange = { newMessage = it },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Type a message...") },
+                    placeholder = { Text(stringResource(R.string.type_a_message)) },
                     shape = RoundedCornerShape(24.dp),
                     leadingIcon = {
                         Row(
@@ -121,19 +120,10 @@ fun ChatScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Image,
-                                contentDescription = "Add Image",
+                                contentDescription = stringResource(R.string.add_image),
                                 modifier = Modifier
                                     .clickable { /* TODO */ }
                                     .padding(start = 6.dp)
-                                    .size(30.dp),
-                                tint = Color.Gray
-                            )
-                            Icon(
-                                imageVector = Icons.Filled.EmojiEmotions,
-                                contentDescription = "Add Emoji",
-                                modifier = Modifier
-                                    .clickable { /* TODO */ }
-                                    .padding(end = 6.dp)
                                     .size(30.dp),
                                 tint = Color.Gray
                             )
@@ -155,7 +145,6 @@ fun ChatScreen(
                             try {
                                 val user = client.auth.currentUserOrNull()
                                 if (user == null) {
-                                    Log.e("ChatScreen", "No user logged in")
                                     return@launch
                                 }
 
@@ -181,7 +170,7 @@ fun ChatScreen(
                     contentPadding = PaddingValues(12.dp),
                     modifier = Modifier.size(48.dp)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = stringResource(R.string.send))
                 }
             }
         }
@@ -192,7 +181,7 @@ fun ChatScreen(
         ) {
             items(messages, key = { it.id }) { message ->
                 val senderProfile = userProfiles[message.sender]
-                val senderName = senderProfile?.displayName ?: "Unknown"
+                val senderName = senderProfile?.displayName ?: stringResource(R.string.unknown)
                 val timestamp = message.created_at
                 val profileImage = senderProfile?.profileImageUrl
                 val nameColor = senderProfile?.displayNameColor

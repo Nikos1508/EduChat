@@ -36,10 +36,12 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.educhat.R
 import com.example.educhat.SupabaseAuthViewModel
 import com.example.educhat.data.model.UserState
 
@@ -56,20 +58,29 @@ fun LoginScreen(
     val context = LocalContext.current
     var loginAttemptMade by remember { mutableStateOf(false) }
 
+    val loginSuccessMsg = stringResource(R.string.logged_in_successfully)
+
+    val loginFailedWithMessage = when (userStateValue) {
+        is UserState.Error -> stringResource(R.string.login_failed_with_message, userStateValue.message)
+        else -> ""
+    }
     LaunchedEffect(userStateValue, loginAttemptMade) {
         if (loginAttemptMade) {
             when (userStateValue) {
                 is UserState.Success -> {
-                    if (userStateValue.message == "Logged in successfully!") {
-                        Toast.makeText(context, "Logged in successfully!", Toast.LENGTH_SHORT).show()
+                    if (userStateValue.message == loginSuccessMsg) {
+                        Toast.makeText(context, loginSuccessMsg, Toast.LENGTH_SHORT).show()
                         onLoginSuccess()
                     }
                 }
+
                 is UserState.Error -> {
-                    Toast.makeText(context, "Login Failed: ${userStateValue.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, loginFailedWithMessage, Toast.LENGTH_LONG).show()
                     loginAttemptMade = false
                 }
-                UserState.Loading -> { /* Show progress in UI */ }
+
+                UserState.Loading -> {
+                }
             }
         }
     }
@@ -95,7 +106,7 @@ fun LoginScreen(
         ) {
             Icon(
                 imageVector = Icons.Default.Person,
-                contentDescription = "User Icon",
+                contentDescription = stringResource(R.string.user_icon),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier
                     .size(100.dp)
@@ -105,7 +116,7 @@ fun LoginScreen(
             var emailFocused by remember { mutableStateOf(false) }
             Column {
                 Text(
-                    text = "Email",
+                    text = stringResource(R.string.email),
                     fontSize = if (emailFocused || email.isNotEmpty()) 12.sp else 16.sp,
                      color = if (emailFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = if (emailFocused || email.isNotEmpty()) 4.dp else 8.dp)
@@ -130,7 +141,7 @@ fun LoginScreen(
                         ) {
                             if (email.isEmpty() && (emailFocused || email.isNotEmpty())) {
                                 Text(
-                                    "Enter your email",
+                                    stringResource(R.string.enter_your_email),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 16.sp
                                 )
@@ -151,7 +162,7 @@ fun LoginScreen(
 
             Column {
                 Text(
-                    text = "Password",
+                    text = stringResource(R.string.password),
                     fontSize = if (passwordFocused || password.isNotEmpty()) 12.sp else 16.sp,
                     color = if (passwordFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = if (passwordFocused || password.isNotEmpty()) 4.dp else 8.dp)
@@ -177,7 +188,7 @@ fun LoginScreen(
                         ) {
                             if (password.isEmpty() && (passwordFocused || password.isNotEmpty())) {
                                 Text(
-                                    "Enter your password",
+                                    stringResource(R.string.enter_your_password),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 16.sp
                                 )
@@ -194,13 +205,15 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            val emptyFieldsMessage = stringResource(R.string.email_and_password_cannot_be_empty)
+
             Button(
                 onClick = {
                     if (email.isNotBlank() && password.isNotBlank()) {
                         loginAttemptMade = true
                         viewModel.login(context, email, password)
                     } else {
-                        Toast.makeText(context, "Email and password cannot be empty", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, emptyFieldsMessage, Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier
@@ -216,17 +229,16 @@ fun LoginScreen(
                 if (userStateValue == UserState.Loading && loginAttemptMade) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
                 } else {
-                    Text("Login")
+                    Text(stringResource(R.string.login))
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             TextButton(onClick = {
-                // Just navigate to the SignUp screen, no sign-up logic here
                 onSignUpClick()
             }) {
-                Text("Sign Up")
+                Text(stringResource(R.string.sign_up))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -234,7 +246,6 @@ fun LoginScreen(
             when (userStateValue) {
                 is UserState.Loading -> {
                     if (!loginAttemptMade) {
-                        // CircularProgressIndicator() // Might be redundant because MainActivity shows one
                     }
                 }
                 is UserState.Error -> {
@@ -244,11 +255,10 @@ fun LoginScreen(
                 }
                 is UserState.Success -> {
                     if (!loginAttemptMade &&
-                        userStateValue.message != "Logged in successfully!" &&
-                        userStateValue.message != "Registered successfully!" &&
-                        userStateValue.message != "User already logged in!" &&
-                        userStateValue.message != "User not logged in!") {
-                        // Text(userStateValue.message, color = MaterialTheme.colorScheme.secondary)
+                        userStateValue.message != stringResource(R.string.logged_in_successfully) &&
+                        userStateValue.message != stringResource(R.string.registered_successfully) &&
+                        userStateValue.message != stringResource(R.string.user_already_logged_in) &&
+                        userStateValue.message != stringResource(R.string.user_not_logged_in)) {
                     }
                 }
             }
