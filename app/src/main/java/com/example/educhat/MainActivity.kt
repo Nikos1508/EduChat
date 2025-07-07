@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -31,6 +32,7 @@ import com.example.educhat.ui.item.ChatScreen
 import com.example.educhat.ui.item.EditProfileScreen
 import com.example.educhat.ui.item.HomeScreen
 import com.example.educhat.ui.item.LoginScreen
+import com.example.educhat.ui.item.PasswordResetScreen
 import com.example.educhat.ui.item.ProfileScreen
 import com.example.educhat.ui.item.ProgramEditScreen
 import com.example.educhat.ui.item.ProgramScreen
@@ -40,14 +42,18 @@ import com.jakewharton.threetenabp.AndroidThreeTen
 
 class MainActivity : ComponentActivity() {
 
+    private lateinit var viewModel: SupabaseAuthViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         AndroidThreeTen.init(this)
 
+        viewModel = ViewModelProvider(this)[SupabaseAuthViewModel::class.java]
+
         handleDeepLink(intent)
 
-        startApp()
+        startApp(viewModel)
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -55,10 +61,10 @@ class MainActivity : ComponentActivity() {
         intent?.let { handleDeepLink(it) }
     }
 
-    private fun startApp() {
+    private fun startApp(viewModel: SupabaseAuthViewModel) {
         setContent {
             EduChatTheme {
-                EduChatApp()
+                EduChatApp(viewModel)
             }
         }
     }
@@ -74,8 +80,7 @@ class MainActivity : ComponentActivity() {
                 ?.substringAfter("access_token=")
 
             token?.let {
-                SupabaseAuthViewModel.resetToken = it
-
+                viewModel.updateResetToken(it)
                 Log.d("MainActivity", "Got reset token: $it")
             }
         }
@@ -96,9 +101,8 @@ enum class AppScreen {
 }
 
 @Composable
-fun EduChatApp() {
+fun EduChatApp(viewModel: SupabaseAuthViewModel) {
     val navController = rememberNavController()
-    val viewModel: SupabaseAuthViewModel = viewModel()
     val programViewModel: ProgramViewModel = viewModel()
 
     val context = LocalContext.current
@@ -110,6 +114,8 @@ fun EduChatApp() {
 
     var editProfileSaveAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
+    val resetToken = viewModel.resetToken
+
     val currentScreen = remember(currentRoute) {
         currentRoute?.let { routeName ->
             try {
@@ -120,12 +126,20 @@ fun EduChatApp() {
         }
     }
 
+    LaunchedEffect(resetToken) {
+        Log.d("EduChatApp", "ResetToken: $resetToken")
+        if (!resetToken.isNullOrEmpty()) {
+            navController.navigate("ResetPassword")
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.isUserLoggedIn(context)
     }
 
     LaunchedEffect(userState) {
+        if (!resetToken.isNullOrEmpty()) return@LaunchedEffect
+
         when (userState) {
             is UserState.Error -> {
                 val message = (userState as UserState.Error).message
@@ -244,6 +258,17 @@ fun EduChatApp() {
             }
             composable(AppScreen.CalendarEdit.name) {
                 CalendarEditScreen()
+            }
+            composable("ResetPassword") {
+                PasswordResetScreen(
+                    viewModel = viewModel,
+                    onPasswordResetSuccess = {
+                        viewModel.updateResetToken(null)
+                        navController.navigate(AppScreen.Login.name) {
+                            popUpTo(AppScreen.Login.name) { inclusive = true }
+                        }
+                    }
+                )
             }
         }
     }

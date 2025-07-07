@@ -6,7 +6,9 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educhat.data.model.UserProfile
@@ -26,6 +28,7 @@ import io.ktor.client.request.patch
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
@@ -57,8 +60,11 @@ class SupabaseAuthViewModel : ViewModel() {
         }
     }
 
-    companion object {
-        var resetToken: String? = null
+    var resetToken by mutableStateOf<String?>(null)
+        private set
+
+    fun updateResetToken(token: String?) {
+        resetToken = token
     }
 
     fun setUserState(state: UserState) {
@@ -337,6 +343,47 @@ class SupabaseAuthViewModel : ViewModel() {
                 _userState.value = UserState.Error(e.localizedMessage ?: "Unknown error")
                 Toast.makeText(context, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+
+    suspend fun updatePasswordWithToken(newPassword: String, context: Context, onSuccess: () -> Unit) {
+        val token = resetToken
+        if (token.isNullOrEmpty()) {
+            Toast.makeText(context, "Invalid or expired reset token", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        _userState.value = UserState.Loading
+
+        try {
+            val url = "${BuildConfig.supabaseUrl}/auth/v1/user"
+
+            val body = buildJsonObject {
+                put("password", newPassword)
+            }
+
+            val response: HttpResponse = httpClient.patch(url) {
+                header("apikey", BuildConfig.supabaseKey)
+                header("Authorization", "Bearer $token")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+
+            if (response.status.isSuccess()) {
+                _userState.value = UserState.Success("Password updated successfully")
+                Toast.makeText(context, "Password updated successfully", Toast.LENGTH_LONG).show()
+                resetToken = null
+                onSuccess()
+            } else {
+                val errorText = response.bodyAsText()
+                _userState.value = UserState.Error("Failed to update password: $errorText")
+                Toast.makeText(context, "Failed to update password: $errorText", Toast.LENGTH_LONG).show()
+            }
+
+        } catch (e: Exception) {
+            _userState.value = UserState.Error(e.localizedMessage ?: "Unknown error")
+            Toast.makeText(context, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
         }
     }
 
