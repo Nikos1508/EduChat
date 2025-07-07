@@ -1,62 +1,52 @@
 package com.example.educhat.ui.components
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.educhat.R
-import com.example.educhat.ui.model.Group
 
 @Composable
-fun GroupItem(group: Group, modifier: Modifier = Modifier) {
-    Card(modifier = Modifier
-        .fillMaxWidth()
-        .padding(8.dp)) {
+fun GroupItem(
+    groupTitle: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = modifier.clickable { onClick() }
+    ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
-                .wrapContentWidth(),
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.Start
         ) {
-            val image = painterResource(R.drawable.educhat_icon)
-
-            Image(
-                painter = image,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(MaterialTheme.shapes.extraLarge)
+            Icon(
+                imageVector = Icons.Default.Tag,
+                contentDescription = "Channel Icon",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.primary
             )
 
-            Column(
-                modifier = Modifier.padding(start = 8.dp),
-            ) {
-                Text(
-                    text = group.title,
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier
-                        .wrapContentWidth()
-                        .padding(bottom = 2.dp)
-                )
-                Text(
-                    text = group.message,
-                    textAlign = TextAlign.Justify,
-                    modifier = Modifier.wrapContentWidth()
-                )
-            }
+            Spacer(modifier = Modifier.width(12.dp))
 
+            Text(
+                text = groupTitle,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }

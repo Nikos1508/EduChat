@@ -1,13 +1,21 @@
+import java.util.Properties
+
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    kotlin("plugin.serialization") version "2.1.20"
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.kotlin.compose) // Make sure libs.versions.toml has this alias properly configured
+    kotlin("plugin.serialization") version "1.9.10"  // Use Kotlin 1.9.10 to align with Compose and stable tooling
 }
 
 android {
     namespace = "com.example.educhat"
     compileSdk = 35
+
+    val localProperties = Properties().apply {
+        load(rootProject.file("local.properties").inputStream())
+    }
+    val key: String = localProperties.getProperty("supabaseKey") ?: ""
+    val url: String = localProperties.getProperty("supabaseUrl") ?: ""
 
     defaultConfig {
         applicationId = "com.example.educhat"
@@ -17,6 +25,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
+        buildConfigField("String", "supabaseKey", "\"$key\"")
+        buildConfigField("String", "supabaseUrl", "\"$url\"")
     }
 
     buildTypes {
@@ -28,39 +41,92 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.3" // Use a stable Compose compiler compatible with Kotlin 1.9.x
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 }
 
 dependencies {
+    // Core libraries
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.activity:activity-ktx:1.8.0")
+    implementation("androidx.activity:activity-compose:1.7.2")
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    // Compose BOM to manage versions
+    implementation(platform("androidx.compose:compose-bom:2024.05.00"))
 
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.2.0-rc-1"))
+    // Compose UI dependencies (versions managed by BOM)
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.ui:ui-graphics")
+
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // Navigation
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("com.google.android.material:material:1.10.0")
+
+    // Compose Preview/Debug
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.05.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+
+    // Supabase BOM and dependencies without explicit versions (managed by BOM)
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.4"))
+    implementation("io.github.jan-tennert.supabase:supabase-kt")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
-    implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
-    implementation("io.ktor:ktor-client-android:3.1.3")
+    implementation("io.github.jan-tennert.supabase:auth-kt")
+
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+
+    // Networking (Ktor)
+    implementation("io.ktor:ktor-client-cio:3.1.3")
+    implementation("io.ktor:ktor-client-content-negotiation:3.1.3")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.3")
+
+    // Image loading for Jetpack Compose
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
+
+    //For the calendar
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.5")
+    implementation("org.threeten:threetenbp:1.6.6:no-tzdb")
+
+    //For croping images
+    implementation("com.github.yalantis:ucrop:2.2.8")
+
+    //Color Picker
+    implementation("io.github.vanpra.compose-material-dialogs:core:0.9.0")
+    implementation("io.github.vanpra.compose-material-dialogs:color:0.9.0")
 }
