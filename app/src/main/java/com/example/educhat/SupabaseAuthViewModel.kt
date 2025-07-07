@@ -13,14 +13,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educhat.data.model.UserProfile
 import com.example.educhat.data.model.UserState
-import com.example.educhat.data.network.SupabaseClient
 import com.example.educhat.data.network.SupabaseClient.client
 import com.example.educhat.data.repository.ProfileRepository
 import com.example.educhat.utils.SharedPreferenceHelper
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.RestException
-import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -75,7 +73,7 @@ class SupabaseAuthViewModel : ViewModel() {
 
     private fun saveTokens(context: Context) {
         viewModelScope.launch {
-            val session = SupabaseClient.client.auth.currentSessionOrNull()
+            val session = client.auth.currentSessionOrNull()
             val sharedPref = SharedPreferenceHelper(context)
             sharedPref.saveStringData("accessToken", session?.accessToken)
             sharedPref.saveStringData("refreshToken", session?.refreshToken)
@@ -90,12 +88,12 @@ class SupabaseAuthViewModel : ViewModel() {
     }
 
     fun loadCurrentUserEmail() {
-        val user = SupabaseClient.client.auth.currentUserOrNull()
+        val user = client.auth.currentUserOrNull()
         _currentUserEmail.value = user?.email
     }
 
     suspend fun ensureUserProfileExists(): Boolean {
-        val user = SupabaseClient.client.auth.currentUserOrNull() ?: return false
+        val user = client.auth.currentUserOrNull() ?: return false
         val profile = profileRepository.getUserProfile(user.id)
         return if (profile == null) {
             createProfile(user.email ?: "Unknown")
@@ -114,9 +112,9 @@ class SupabaseAuthViewModel : ViewModel() {
         }
 
         try {
-            SupabaseClient.client.auth.refreshCurrentSession()
+            client.auth.refreshCurrentSession()
 
-            val currentUser = SupabaseClient.client.auth.currentUserOrNull()
+            val currentUser = client.auth.currentUserOrNull()
             if (currentUser != null) {
                 saveTokens(context)
                 loadCurrentUserEmail()
@@ -137,7 +135,7 @@ class SupabaseAuthViewModel : ViewModel() {
     }
 
     suspend fun createProfile(displayName: String): Boolean = withContext(Dispatchers.IO) {
-        val user = SupabaseClient.client.auth.currentUserOrNull() ?: return@withContext false
+        val user = client.auth.currentUserOrNull() ?: return@withContext false
         val userId = user.id
 
         val profileData = mapOf(
@@ -148,7 +146,7 @@ class SupabaseAuthViewModel : ViewModel() {
         )
 
         try {
-            SupabaseClient.client.postgrest["profiles"].insert(profileData)
+            client.postgrest["profiles"].insert(profileData)
             Log.d("createProfile", "Profile created successfully")
             true
         } catch (e: Exception) {
@@ -158,7 +156,7 @@ class SupabaseAuthViewModel : ViewModel() {
     }
 
     fun loadUserProfile() {
-        SupabaseClient.client.auth.currentUserOrNull()?.let { user ->
+        client.auth.currentUserOrNull()?.let { user ->
             viewModelScope.launch {
                 val profile = profileRepository.getUserProfile(user.id)
                 _userProfile.value = profile
@@ -171,8 +169,8 @@ class SupabaseAuthViewModel : ViewModel() {
         newDescription: String? = null,
         newImageUrl: String? = null
     ): Boolean {
-        val user = SupabaseClient.client.auth.currentUserOrNull() ?: return false
-        val token = SupabaseClient.client.auth.currentSessionOrNull()?.accessToken ?: return false
+        val user = client.auth.currentUserOrNull() ?: return false
+        val token = client.auth.currentSessionOrNull()?.accessToken ?: return false
 
         val body = buildJsonObject {
             newDisplayName?.takeIf { it.isNotBlank() }?.let { put("display_name", it) }
@@ -197,12 +195,12 @@ class SupabaseAuthViewModel : ViewModel() {
     }
 
     suspend fun uploadProfileImage(uri: Uri, resolver: ContentResolver): String? {
-        val user = SupabaseClient.client.auth.currentUserOrNull() ?: return null
-        val token = SupabaseClient.client.auth.currentSessionOrNull()?.accessToken ?: return null
+        val user = client.auth.currentUserOrNull() ?: return null
+        val token = client.auth.currentSessionOrNull()?.accessToken ?: return null
 
         val bucket = "profile-images"
         val fileName = "profile.png"
-        val path = "${user.id}/$fileName" // 👈 matches your RLS policy!
+        val path = "${user.id}/$fileName"
 
         val bytes = resolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
 
@@ -212,12 +210,11 @@ class SupabaseAuthViewModel : ViewModel() {
             val response: HttpResponse = httpClient.put(url) {
                 header("apikey", BuildConfig.supabaseKey)
                 header("Authorization", "Bearer $token")
-                contentType(ContentType.Image.PNG) // or JPEG if needed
+                contentType(ContentType.Image.PNG)
                 setBody(bytes)
             }
 
             if (response.status.isSuccess()) {
-                // 👇 public URL for later display
                 "${BuildConfig.supabaseUrl}/storage/v1/object/public/$bucket/$path"
             } else {
                 null
@@ -250,22 +247,20 @@ class SupabaseAuthViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
-                val result = SupabaseClient.client.auth.signUpWith(io.github.jan.supabase.auth.providers.builtin.Email) {
+                val result = client.auth.signUpWith(io.github.jan.supabase.auth.providers.builtin.Email) {
                     email = userEmail
                     password = userPassword
                 }
 
-                val user = SupabaseClient.client.auth.currentUserOrNull()
+                val user = client.auth.currentUserOrNull()
                 val emailConfirmed = user?.emailConfirmedAt != null
 
                 if (!emailConfirmed) {
-                    // Don't create profile yet, wait for email confirmation
                     _userState.value = UserState.Success("Check your email to confirm your account.")
                     onNavigateToLogin()
                     return@launch
                 }
 
-                // If email confirmed (usually rare on signup), create profile now
                 val success = createProfile(displayName)
                 if (!success) {
                     _userState.value = UserState.Error("Failed to create user profile.")
@@ -293,7 +288,7 @@ class SupabaseAuthViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
-                SupabaseClient.client.auth.signInWith(io.github.jan.supabase.auth.providers.builtin.Email) {
+                client.auth.signInWith(io.github.jan.supabase.auth.providers.builtin.Email) {
                     email = userEmail
                     password = userPassword
                 }
@@ -323,7 +318,7 @@ class SupabaseAuthViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
-                SupabaseClient.client.auth.signOut()
+                client.auth.signOut()
                 clearTokens(context)
                 _currentUserEmail.value = null
                 _userProfile.value = null
@@ -338,7 +333,7 @@ class SupabaseAuthViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
-                SupabaseClient.client.auth.resetPasswordForEmail(email)
+                client.auth.resetPasswordForEmail(email)
                 _userState.value = UserState.Success("Password reset email sent. Check your inbox.")
                 Toast.makeText(context, "Password reset email sent. Check your inbox.", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
@@ -410,39 +405,4 @@ class SupabaseAuthViewModel : ViewModel() {
             }
         }
     }
-
-    suspend fun addGroup(groupName: String): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val insertedRows = client
-                .from("groups")
-                .insert(listOf(mapOf("group" to groupName)))
-
-            if (insertedRows is List<*> && insertedRows.isNotEmpty()) {
-                true
-            } else {
-                Log.e("SupabaseAuthViewModel", "Insert returned empty or unexpected response")
-                false
-            }
-        } catch (e: Exception) {
-            Log.e("SupabaseAuthViewModel", "Failed to add group", e)
-            false
-        }
-    }
-
-    fun addGroupAsync(groupName: String, onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            try {
-                val result = client.from("groups")
-                    .insert(mapOf("name" to groupName))
-                    .decodeSingle<Map<String, Any>>()
-
-                Log.d("SupabaseAuthViewModel", "Group insert result: $result")
-                onResult(true)
-            } catch (e: Exception) {
-                Log.e("SupabaseAuthViewModel", "Failed to insert group: ${e.localizedMessage}")
-                onResult(false)
-            }
-        }
-    }
-
 }

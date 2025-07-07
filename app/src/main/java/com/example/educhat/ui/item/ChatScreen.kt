@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.educhat.data.model.Message
+import com.example.educhat.data.model.UserProfile
 import com.example.educhat.data.network.SupabaseClient.client
 import com.example.educhat.ui.components.MessageItemLeft
 import com.example.educhat.ui.components.MessageItemRight
@@ -58,9 +60,31 @@ fun ChatScreen(
     var newMessage by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
+    val userProfiles = remember { mutableStateMapOf<String, UserProfile>() }
+
     // Get the current user ID once (null if not logged in)
     val currentUserId = remember {
         client.auth.currentUserOrNull()?.id
+    }
+
+    suspend fun fetchAllUserProfiles(): List<UserProfile>? {
+        return try {
+            client.from("user_profiles")
+                .select()
+                .decodeList<UserProfile>()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    LaunchedEffect(messages) {
+        if (userProfiles.isEmpty()) {
+            val profiles = fetchAllUserProfiles()
+            profiles?.forEach { profile ->
+                userProfiles[profile.id] = profile
+            }
+        }
     }
 
     LaunchedEffect(groupId) {
@@ -170,12 +194,14 @@ fun ChatScreen(
                 if (message.sender == currentUserId) {
                     MessageItemRight(
                         message = message,
-                        modifier = Modifier.animateItemPlacement()
+                        senderProfileImageUrl = userProfiles[message.sender]?.profileImageUrl,
+                        modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                     )
                 } else {
                     MessageItemLeft(
                         message = message,
-                        modifier = Modifier.animateItemPlacement()
+                        senderProfileImageUrl = userProfiles[message.sender]?.profileImageUrl,
+                        modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null)
                     )
                 }
             }
