@@ -40,10 +40,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.educhat.R
 import com.example.educhat.data.model.CalendarEvent
 import com.example.educhat.data.model.CalendarEventType
 import com.example.educhat.data.network.CalendarRepository
@@ -111,7 +113,7 @@ fun CalendarScreen() {
             TextButton(
                 onClick = { if (isPrevEnabled) selectedDate = selectedDate.minusMonths(1) },
                 enabled = isPrevEnabled
-            ) { Text("< Prev") }
+            ) { Text(stringResource(R.string.previous)) }
 
             Text(
                 text = "${selectedDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${selectedDate.year}",
@@ -119,12 +121,11 @@ fun CalendarScreen() {
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            TextButton(onClick = { selectedDate = selectedDate.plusMonths(1) }) { Text("Next >") }
+            TextButton(onClick = { selectedDate = selectedDate.plusMonths(1) }) { Text(stringResource(R.string.next)) }
         }
 
         Spacer(Modifier.height(8.dp))
 
-        // Today & View all month events buttons spaced nicely with padding
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -136,14 +137,14 @@ fun CalendarScreen() {
                 selectedDate = LocalDate.now()
                 selectedDay = LocalDate.now()
             }) {
-                Text("Today")
+                Text(stringResource(R.string.today))
             }
 
             TextButton(onClick = {
                 selectedDay = allMonthSelected
             }) {
                 Text(
-                    text = if (selectedDay == allMonthSelected) "Viewing all events for the month" else "View all month events",
+                    text = if (selectedDay == allMonthSelected) stringResource(R.string.viewing_all_events_for_the_month) else stringResource(R.string.view_all_month_events),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                 )
             }
@@ -264,11 +265,15 @@ fun CalendarScreen() {
 
         Spacer(Modifier.height(8.dp))
 
+        val monthName = selectedDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+
+        val titleText = if (selectedDay == allMonthSelected)
+            stringResource(R.string.events_in_month, monthName)
+        else
+            stringResource(R.string.events_on_day, selectedDay)
+
         Text(
-            text = if (selectedDay == allMonthSelected)
-                "Events in ${selectedDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())}"
-            else
-                "Events on $selectedDay",
+            text = titleText,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(vertical = 8.dp)
@@ -285,7 +290,7 @@ fun CalendarScreen() {
 
         if (filteredEvents.isEmpty()) {
             Text(
-                text = "No events found.",
+                text = stringResource(R.string.no_events_found),
                 modifier = Modifier.padding(8.dp),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -337,24 +342,31 @@ fun EventItem(event: CalendarEvent) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        val context = LocalContext.current
+        val unknown = stringResource(R.string.unknown)
+        val shareLabel = stringResource(R.string.share_event)
+
+        val shareText = stringResource(
+            R.string.share_event_text,
+            event.event,
+            event.description,
+            formattedDate,
+            event.type?.displayName ?: unknown
+        )
+
         IconButton(onClick = {
-            val shareText = """
-                Event: ${event.event}
-                Description: ${event.description}
-                Date: $formattedDate
-                Category: ${event.type?.displayName ?: "Unknown"}
-            """.trimIndent()
-
-
             val sendIntent = Intent().apply {
                 action = Intent.ACTION_SEND
                 putExtra(Intent.EXTRA_TEXT, shareText)
                 type = "text/plain"
             }
-            val shareIntent = Intent.createChooser(sendIntent, "Share event")
+            val shareIntent = Intent.createChooser(sendIntent, shareLabel)
             context.startActivity(shareIntent)
         }) {
-            Icon(imageVector = Icons.Default.Share, contentDescription = "Share event")
+            Icon(
+                imageVector = Icons.Default.Share,
+                contentDescription = shareLabel
+            )
         }
     }
 }

@@ -34,10 +34,12 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.educhat.R
 import com.example.educhat.SupabaseAuthViewModel
 import com.example.educhat.data.model.UserState
 
@@ -66,23 +68,27 @@ fun SignUpScreen(
         // Handle permission result if needed
     }
 
+    val signUpFailedFormat = stringResource(R.string.sign_up_failed)
+
     LaunchedEffect(userStateValue, signUpAttemptMade) {
         if (signUpAttemptMade) {
             when (userStateValue) {
                 is UserState.Success -> {
                     Toast.makeText(context, userStateValue.message, Toast.LENGTH_LONG).show()
                     if (userStateValue.message.contains("Check your email")) {
-                        onSignUpComplete()  // This should navigate to login
+                        onSignUpComplete()
                     }
                     signUpAttemptMade = false
                 }
                 is UserState.Error -> {
-                    Toast.makeText(context, "Sign Up Failed: ${userStateValue.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context,
+                        String.format(signUpFailedFormat, userStateValue.message),
+                        Toast.LENGTH_LONG
+                    ).show()
                     signUpAttemptMade = false
                 }
-                UserState.Loading -> {
-
-                }
+                UserState.Loading -> { }
             }
         }
     }
@@ -110,7 +116,7 @@ fun SignUpScreen(
             // Email Input
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Email",
+                    text = stringResource(R.string.email_label),
                     fontSize = if (emailFocused || email.isNotEmpty()) 12.sp else 16.sp,
                     color = if (emailFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = if (emailFocused || email.isNotEmpty()) 4.dp else 8.dp)
@@ -135,7 +141,7 @@ fun SignUpScreen(
                         ) {
                             if (email.isEmpty() && (emailFocused || email.isNotEmpty())) {
                                 Text(
-                                    "Enter your email",
+                                    stringResource(R.string.email_placeholder),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 16.sp
                                 )
@@ -155,7 +161,7 @@ fun SignUpScreen(
             // Password Input
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Password",
+                    text = stringResource(R.string.password_label),
                     fontSize = if (passwordFocused || password.isNotEmpty()) 12.sp else 16.sp,
                     color = if (passwordFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = if (passwordFocused || password.isNotEmpty()) 4.dp else 8.dp)
@@ -181,7 +187,7 @@ fun SignUpScreen(
                         ) {
                             if (password.isEmpty() && (passwordFocused || password.isNotEmpty())) {
                                 Text(
-                                    "Enter your password",
+                                    stringResource(R.string.password_placeholder),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 16.sp
                                 )
@@ -198,10 +204,10 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            //Display name input
+            // Display Name Input
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Display Name",
+                    text = stringResource(R.string.display_name_label),
                     fontSize = if (displayNameFocused || displayName.isNotEmpty()) 12.sp else 16.sp,
                     color = if (displayNameFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = if (displayNameFocused || displayName.isNotEmpty()) 4.dp else 8.dp)
@@ -226,7 +232,7 @@ fun SignUpScreen(
                         ) {
                             if (displayName.isEmpty() && (displayNameFocused || displayName.isNotEmpty())) {
                                 Text(
-                                    "Enter your display name",
+                                    stringResource(R.string.display_name_placeholder),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 16.sp
                                 )
@@ -243,15 +249,16 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            val fillAllFields = stringResource(R.string.fill_all_fields)
             Button(
                 onClick = {
-                    if (email.isNotBlank() && password.isNotBlank() && displayName.isNotBlank() ) {
+                    if (email.isNotBlank() && password.isNotBlank() && displayName.isNotBlank()) {
                         signUpAttemptMade = true
                         viewModel.signUp(context, email, password, displayName) {
                             onBackToLogin()
                         }
                     } else {
-                        Toast.makeText(context, "All fields must be filled", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, fillAllFields, Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier
@@ -267,14 +274,14 @@ fun SignUpScreen(
                 if (userStateValue == UserState.Loading && signUpAttemptMade) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
                 } else {
-                    Text("Create Account")
+                    Text(stringResource(R.string.create_account))
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(onClick = { onBackToLogin() }) {
-                Text("Already have an account? Log in")
+                Text(stringResource(R.string.already_have_account))
             }
         }
     }

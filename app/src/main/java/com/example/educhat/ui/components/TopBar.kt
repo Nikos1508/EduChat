@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,16 +49,16 @@ fun TopBar(
     TopAppBar(
         title = {
             when (currentScreen) {
-                AppScreen.Home -> Text("EduChat")
-                AppScreen.Chat -> Text(ChatName ?: "Group Chat")
-                AppScreen.Profile -> Text("Your Profile")
-                AppScreen.Program -> Text("Programs")
-                AppScreen.ProgramEdit -> Text("Edit Program")
-                AppScreen.Calendar -> Text("Calendar")
-                AppScreen.CalendarEdit -> Text("Edit Calendar")
+                AppScreen.Home -> Text(stringResource(R.string.app_name))
+                AppScreen.Chat -> Text(ChatName ?: stringResource(R.string.group_chat))
+                AppScreen.Profile -> Text(stringResource(R.string.your_profile))
+                AppScreen.Program -> Text(stringResource(R.string.programs))
+                AppScreen.ProgramEdit -> Text(stringResource(R.string.edit_program))
+                AppScreen.Calendar -> Text(stringResource(R.string.calendar))
+                AppScreen.CalendarEdit -> Text(stringResource(R.string.edit_calendar))
                 AppScreen.Login -> {}
                 AppScreen.SignUp -> {}
-                AppScreen.EditProfile -> Text("Edit Profile")
+                AppScreen.EditProfile -> Text(stringResource(R.string.edit_profile))
             }
         },
         navigationIcon = {
@@ -65,7 +66,7 @@ fun TopBar(
                 AppScreen.Profile, AppScreen.Chat, AppScreen.Program, AppScreen.ProgramEdit,
                 AppScreen.Calendar, AppScreen.CalendarEdit, AppScreen.EditProfile -> {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
                 AppScreen.Home, AppScreen.Login, AppScreen.SignUp -> {}
@@ -75,7 +76,7 @@ fun TopBar(
             if (onSave != null) {
                 TextButton(onClick = onSave) {
                     Text(
-                        "Save",
+                        stringResource(R.string.save),
                         fontSize = 18.sp
                     )
                 }
@@ -83,12 +84,11 @@ fun TopBar(
                 when (currentScreen) {
                     AppScreen.Home, AppScreen.Calendar, AppScreen.Program, AppScreen.Chat, AppScreen.Profile -> {
 
-                        // Show Calendar icon on Home, Profile, Program, Groups
                         if (currentScreen in listOf(AppScreen.Home, AppScreen.Profile, AppScreen.Program, AppScreen.Chat)) {
                             IconButton(onClick = { onNavigate(AppScreen.Calendar) }) {
                                 Icon(
                                     imageVector = Icons.Filled.CalendarToday,
-                                    contentDescription = "Calendar"
+                                    contentDescription = stringResource(R.string.calendar)
                                 )
                             }
                         }
@@ -97,7 +97,7 @@ fun TopBar(
                             IconButton(onClick = { onNavigate(AppScreen.Program) }) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.List,
-                                    contentDescription = "Programs"
+                                    contentDescription = stringResource(R.string.programs)
                                 )
                             }
                         }
@@ -113,7 +113,7 @@ fun TopBar(
                             IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
                                 Image(
                                     painter = profilePainter,
-                                    contentDescription = "Profile",
+                                    contentDescription = stringResource(R.string.profile),
                                     modifier = Modifier
                                         .size(40.dp)
                                         .padding(2.dp)
@@ -123,11 +123,10 @@ fun TopBar(
                         }
                     }
                     AppScreen.CalendarEdit, AppScreen.ProgramEdit -> {
-                        // Show Profile icon/image on CalendarEdit and ProgramEdit as well
                         IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
                             Image(
                                 painter = profilePainter,
-                                contentDescription = "Profile",
+                                contentDescription = stringResource(R.string.profile),
                                 modifier = Modifier
                                     .size(40.dp)
                                     .padding(2.dp)
@@ -138,7 +137,6 @@ fun TopBar(
                     AppScreen.Profile, AppScreen.Login, AppScreen.SignUp -> {
                     }
                     else -> {
-                        // Default fallback, show profile if not excluded
                         val excludedProfileScreens = listOf(
                             AppScreen.Login,
                             AppScreen.SignUp,
@@ -149,7 +147,7 @@ fun TopBar(
                             IconButton(onClick = { onNavigate(AppScreen.Profile) }) {
                                 Image(
                                     painter = profilePainter,
-                                    contentDescription = "Profile",
+                                    contentDescription = stringResource(R.string.profile),
                                     modifier = Modifier
                                         .size(40.dp)
                                         .padding(2.dp)

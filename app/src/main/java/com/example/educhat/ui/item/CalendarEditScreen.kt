@@ -27,10 +27,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.educhat.R
 import com.example.educhat.data.model.CalendarEvent
 import com.example.educhat.data.model.CalendarEventType
 import com.example.educhat.data.network.CalendarRepository
@@ -60,6 +63,8 @@ fun CalendarEditScreen() {
     var successMessage by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
+    val context = LocalContext.current
+
     var showDatePickerBottomSheet by remember { mutableStateOf(false) }
 
     Column(
@@ -68,14 +73,14 @@ fun CalendarEditScreen() {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(text = "Add New Calendar Event", style = MaterialTheme.typography.headlineMedium)
+        Text(text = stringResource(R.string.add_new_calendar_event), style = MaterialTheme.typography.headlineMedium)
 
         OutlinedTextField(
             value = eventName,
             onValueChange = {
                 if (it.length <= 50) eventName = it
             },
-            label = { Text("Event Name") },
+            label = { Text(stringResource(R.string.event_name)) },
             supportingText = { Text("${eventName.length} / 50") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -85,14 +90,14 @@ fun CalendarEditScreen() {
             onValueChange = {
                 if (it.length <= 50) description = it
             },
-            label = { Text("Description") },
+            label = { Text(stringResource(R.string.description)) },
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = selectedDate.format(dateFormatter),
             onValueChange = {},
-            label = { Text("Date") },
+            label = { Text(stringResource(R.string.date)) },
             readOnly = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -119,7 +124,7 @@ fun CalendarEditScreen() {
                 readOnly = true,
                 value = selectedType.displayName,
                 onValueChange = {},
-                label = { Text("Category") },
+                label = { Text(stringResource(R.string.category)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
                     .menuAnchor()
@@ -149,6 +154,8 @@ fun CalendarEditScreen() {
             onClick = {
                 isLoading = true
                 scope.launch {
+                    val successMsg = context.getString(R.string.event_added_successfully)
+
                     try {
                         CalendarRepository.addEvent(
                             CalendarEvent(
@@ -158,7 +165,7 @@ fun CalendarEditScreen() {
                                 type = selectedType
                             )
                         )
-                        successMessage = "Event added successfully!"
+                        successMessage = successMsg
                         eventName = ""
                         description = ""
                     } catch (e: Exception) {
@@ -171,10 +178,11 @@ fun CalendarEditScreen() {
             modifier = Modifier.fillMaxWidth(),
             enabled = eventName.isNotBlank() && !isLoading
         ) {
-            Text(if (isLoading) "Saving..." else "Add Event")
+            Text(if (isLoading) stringResource(R.string.saving) else stringResource(R.string.add_event))
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerBottomSheet(
@@ -201,7 +209,7 @@ fun DatePickerBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Select Date", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+            Text(stringResource(R.string.select_date), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -209,12 +217,11 @@ fun DatePickerBottomSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 DropdownMenuWithLabel(
-                    label = "Year",
+                    label = stringResource(R.string.year),
                     options = years,
                     selectedOption = selectedYear,
                     onOptionSelected = {
                         selectedYear = it
-                        // Adjust day if out of range for new month/year
                         val maxDay = YearMonth.of(selectedYear, selectedMonth).lengthOfMonth()
                         if (selectedDay > maxDay) {
                             selectedDay = maxDay
@@ -222,7 +229,7 @@ fun DatePickerBottomSheet(
                     }
                 )
                 DropdownMenuWithLabel(
-                    label = "Month",
+                    label = stringResource(R.string.month),
                     options = (1..12).toList(),
                     selectedOption = selectedMonth,
                     onOptionSelected = {
@@ -234,7 +241,7 @@ fun DatePickerBottomSheet(
                     }
                 )
                 DropdownMenuWithLabel(
-                    label = "Day",
+                    label = stringResource(R.string.day),
                     options = days,
                     selectedOption = selectedDay,
                     onOptionSelected = { selectedDay = it }
@@ -246,12 +253,12 @@ fun DatePickerBottomSheet(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(onClick = onDismissRequest) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
                 Button(onClick = {
                     onDateSelected(LocalDate.of(selectedYear, selectedMonth, selectedDay))
                 }) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         }

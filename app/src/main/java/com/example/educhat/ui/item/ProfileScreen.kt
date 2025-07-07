@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -58,6 +59,9 @@ fun ProfileScreen(
 
     var showResetPasswordDialog by remember { mutableStateOf(false) }
 
+    val logoutText = stringResource(R.string.logged_out)
+    val noEmailFoundText = stringResource(R.string.no_email_found)
+
     val imagePainter = rememberAsyncImagePainter(
         model = userProfile?.profileImageUrl ?: R.drawable.profile_image
     )
@@ -70,7 +74,7 @@ fun ProfileScreen(
     ) {
         Image(
             painter = imagePainter,
-            contentDescription = "Profile picture",
+            contentDescription = stringResource(R.string.profile_picture),
             modifier = Modifier
                 .size(100.dp)
                 .clip(CircleShape)
@@ -81,14 +85,14 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = userProfile?.displayName ?: "Unknown User",
+            text = userProfile?.displayName ?: stringResource(R.string.unknown_user),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Bold
         )
 
         Text(
-            text = userEmail ?: "Unknown Email",
+            text = userEmail ?: stringResource(R.string.unknown_email),
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
@@ -99,7 +103,7 @@ fun ProfileScreen(
 
         ProfileOptionItem(
             icon = Icons.Default.Person,
-            text = "Account Info",
+            text = stringResource(R.string.account_info),
             onClick = { navController.navigate(AppScreen.EditProfile.name) }
         )
 
@@ -107,7 +111,7 @@ fun ProfileScreen(
 
         ProfileOptionItem(
             icon = Icons.Default.Notifications,
-            text = "Notifications",
+            text = stringResource(R.string.notifications),
             onClick = { /* TODO */ }
         )
 
@@ -115,7 +119,7 @@ fun ProfileScreen(
 
         ProfileOptionItem(
             icon = Icons.Default.LockReset,
-            text = "Reset Password",
+            text = stringResource(R.string.reset_password),
             onClick = {
                 showResetPasswordDialog = true
             }
@@ -125,23 +129,24 @@ fun ProfileScreen(
 
         ProfileOptionItem(
             icon = Icons.AutoMirrored.Filled.ExitToApp,
-            text = "Log Out",
+            text = stringResource(R.string.log_out),
             onClick = {
                 viewModel.logout(context)
-                Toast.makeText(context, "Logged out", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, logoutText, Toast.LENGTH_SHORT).show()
                 onLogoutComplete()
             }
         )
 
         HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
     }
+
     if (showResetPasswordDialog) {
         ResetPasswordConfirmationDialog(
             onConfirm = {
                 showResetPasswordDialog = false
                 userEmail?.let {
                     viewModel.sendPasswordResetEmail(context, it)
-                } ?: Toast.makeText(context, "No email found", Toast.LENGTH_SHORT).show()
+                } ?: Toast.makeText(context, noEmailFoundText, Toast.LENGTH_SHORT).show()
             },
             onDismiss = {
                 showResetPasswordDialog = false
@@ -154,19 +159,19 @@ fun ProfileScreen(
 fun ResetPasswordConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
-    ) {
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Reset Password") },
-        text = { Text("Are you sure you want to send a password reset email?") },
+        title = { Text(stringResource(R.string.reset_password)) },
+        text = { Text(stringResource(R.string.reset_password_confirmation)) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Yes")
+                Text(stringResource(R.string.yes))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("No")
+                Text(stringResource(R.string.no))
             }
         }
     )

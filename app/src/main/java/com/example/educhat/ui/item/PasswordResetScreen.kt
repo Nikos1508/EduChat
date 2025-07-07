@@ -20,8 +20,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.educhat.R
 import com.example.educhat.SupabaseAuthViewModel
 import com.example.educhat.data.model.UserState
 import kotlinx.coroutines.launch
@@ -46,14 +48,14 @@ fun PasswordResetScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Reset Password", style = MaterialTheme.typography.headlineMedium)
+        Text(text = stringResource(R.string.reset_password), style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = newPassword,
             onValueChange = { newPassword = it },
-            label = { Text("New Password") },
+            label = { Text(stringResource(R.string.new_password)) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation()
         )
@@ -63,7 +65,7 @@ fun PasswordResetScreen(
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
-            label = { Text("Confirm Password") },
+            label = { Text(stringResource(R.string.confirm_password)) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation()
         )

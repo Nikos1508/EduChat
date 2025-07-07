@@ -33,7 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.educhat.R
 import com.example.educhat.data.model.Group
 import com.example.educhat.data.network.SupabaseClient.client
 import com.example.educhat.ui.components.GroupItem
@@ -53,11 +55,11 @@ fun SearchBar(
     TextField(
         value = query,
         onValueChange = onQueryChanged,
-        placeholder = { Text("Search groups") },
+        placeholder = { Text(stringResource(R.string.search_groups)) },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = "Search icon",
+                contentDescription = stringResource(R.string.search_icon),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         },
@@ -135,7 +137,7 @@ fun HomeScreen(
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Add Channel",
+                contentDescription = stringResource(R.string.add_channel),
                 tint = MaterialTheme.colorScheme.onPrimary
             )
         }
@@ -146,12 +148,12 @@ fun HomeScreen(
                     showAddDialog = false
                     newChannelName = ""
                 },
-                title = { Text("Add Channel") },
+                title = { Text(stringResource(R.string.add_channel)) },
                 text = {
                     TextField(
                         value = newChannelName,
                         onValueChange = { newChannelName = it },
-                        label = { Text("Channel Name") },
+                        label = { Text(stringResource(R.string.channel_name)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -183,7 +185,7 @@ fun HomeScreen(
                             }
                         }
                     ) {
-                        Text("Add")
+                        Text(stringResource(R.string.add))
                     }
                 },
                 dismissButton = {
@@ -191,7 +193,7 @@ fun HomeScreen(
                         showAddDialog = false
                         newChannelName = ""
                     }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             )

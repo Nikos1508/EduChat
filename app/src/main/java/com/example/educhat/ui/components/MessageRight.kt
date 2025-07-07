@@ -22,9 +22,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import coil.compose.rememberAsyncImagePainter
 import com.example.educhat.R
 import com.example.educhat.data.model.Message
@@ -34,13 +37,20 @@ import com.example.educhat.ui.theme.EduChatTheme
 fun MessageItemRight(
     message: Message,
     senderProfileImageUrl: String?,
-    senderName: String = "Οδυσσέας",
-    timestamp: String = "10:18",
+    senderName: String,
+    timestamp: String,
+    nameColorHex: String? = null,
     modifier: Modifier = Modifier
 ) {
     val imagePainter = rememberAsyncImagePainter(
         model = senderProfileImageUrl.takeIf { !it.isNullOrBlank() } ?: R.drawable.profile_image
     )
+
+    val nameColor = try {
+        nameColorHex?.let { Color(it.toColorInt()) }
+    } catch (e: Exception) {
+        null
+    } ?: MaterialTheme.colorScheme.primary
 
     Row(
         verticalAlignment = Alignment.Top,
@@ -51,7 +61,7 @@ fun MessageItemRight(
     ) {
         Image(
             painter = imagePainter,
-            contentDescription = "Profile picture",
+            contentDescription = stringResource(R.string.profile_picture_desc),
             modifier = Modifier
                 .size(36.dp)
                 .clip(CircleShape)
@@ -64,7 +74,7 @@ fun MessageItemRight(
         Column {
             Text(
                 text = senderName,
-                color = MaterialTheme.colorScheme.primary,
+                color = nameColor,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
             )
@@ -110,13 +120,17 @@ fun MessageItemRightPreviewLight() {
     EduChatTheme(darkTheme = false) {
         MessageItemRight(
             message = Message(
-                id = 2,
-                content = "All good here! Thanks for checking.",
+                id = 1,
+                content = "Hey! Just checking in.",
                 group = "test",
-                sender = "me",
-                created_at = "2025-07-07T12:35:10Z"
+                sender = "user1",
+                created_at = "2025-07-07T12:34:56Z"
             ),
-            senderProfileImageUrl = null
+            senderProfileImageUrl = null,
+            senderName = "user1",
+            timestamp = "2025-07-07T12:34:56Z",
+            nameColorHex = "000000",
+            modifier = Modifier
         )
     }
 }
@@ -127,13 +141,17 @@ fun MessageItemRightPreviewDark() {
     EduChatTheme(darkTheme = true) {
         MessageItemRight(
             message = Message(
-                id = 2,
-                content = "All good here! Thanks for checking.",
+                id = 1,
+                content = "Hey! Just checking in.",
                 group = "test",
-                sender = "me",
-                created_at = "2025-07-07T12:35:10Z"
+                sender = "user1",
+                created_at = "2025-07-07T12:34:56Z"
             ),
-            senderProfileImageUrl = null
+            senderProfileImageUrl = null,
+            senderName = "user1",
+            timestamp = "2025-07-07T12:34:56Z",
+            nameColorHex = "000000",
+            modifier = Modifier
         )
     }
 }
