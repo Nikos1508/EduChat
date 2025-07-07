@@ -4,7 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Group(
-    val id: Int,
     val group: String
 )
 @Serializable

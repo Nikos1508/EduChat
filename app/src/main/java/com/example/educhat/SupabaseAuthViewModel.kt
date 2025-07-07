@@ -14,11 +14,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.educhat.data.model.UserProfile
 import com.example.educhat.data.model.UserState
 import com.example.educhat.data.network.SupabaseClient
+import com.example.educhat.data.network.SupabaseClient.client
 import com.example.educhat.data.repository.ProfileRepository
 import com.example.educhat.utils.SharedPreferenceHelper
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.RestException
+import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -408,4 +410,39 @@ class SupabaseAuthViewModel : ViewModel() {
             }
         }
     }
+
+    suspend fun addGroup(groupName: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val insertedRows = client
+                .from("groups")
+                .insert(listOf(mapOf("group" to groupName)))
+
+            if (insertedRows is List<*> && insertedRows.isNotEmpty()) {
+                true
+            } else {
+                Log.e("SupabaseAuthViewModel", "Insert returned empty or unexpected response")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("SupabaseAuthViewModel", "Failed to add group", e)
+            false
+        }
+    }
+
+    fun addGroupAsync(groupName: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val result = client.from("groups")
+                    .insert(mapOf("name" to groupName))
+                    .decodeSingle<Map<String, Any>>()
+
+                Log.d("SupabaseAuthViewModel", "Group insert result: $result")
+                onResult(true)
+            } catch (e: Exception) {
+                Log.e("SupabaseAuthViewModel", "Failed to insert group: ${e.localizedMessage}")
+                onResult(false)
+            }
+        }
+    }
+
 }
