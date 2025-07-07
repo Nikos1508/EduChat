@@ -125,4 +125,8 @@ dependencies {
 
     //For croping images
     implementation("com.github.yalantis:ucrop:2.2.8")
+
+    //Color Picker
+    implementation("io.github.vanpra.compose-material-dialogs:core:0.9.0")
+    implementation("io.github.vanpra.compose-material-dialogs:color:0.9.0")
 }

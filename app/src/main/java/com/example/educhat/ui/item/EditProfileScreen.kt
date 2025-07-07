@@ -7,6 +7,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,14 +38,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.educhat.R
 import com.example.educhat.SupabaseAuthViewModel
 import com.example.educhat.data.model.UserState
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.color.colorChooser
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
 import java.io.File
@@ -55,7 +63,6 @@ fun EditProfileScreen(
     onSaveAvailable: (saveAction: () -> Unit) -> Unit
 ) {
     val userState by viewModel.userState
-
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val userProfile by viewModel.userProfile
@@ -64,9 +71,29 @@ fun EditProfileScreen(
     var description by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
+    fun parseColorOrDefault(hex: String?, default: Color): Color {
+        return try {
+            hex?.let { Color(it.toColorInt()) } ?: default
+        } catch (e: Exception) {
+            default
+        }
+    }
+
+    var selectedColor by remember {
+        mutableStateOf(parseColorOrDefault(userProfile?.displayNameColor, Color(0xFFFF5733)))
+    }
+
+    fun colorToHex(color: Color): String {
+        val r = (color.red * 255).toInt()
+        val g = (color.green * 255).toInt()
+        val b = (color.blue * 255).toInt()
+        return String.format("#%02X%02X%02X", r, g, b)
+    }
+
     LaunchedEffect(userProfile) {
         displayName = userProfile?.displayName ?: ""
         description = userProfile?.description ?: ""
+        selectedColor = parseColorOrDefault(userProfile?.displayNameColor, Color(0xFFFF5733))
     }
 
     val saveProfileChanges = {
@@ -77,16 +104,18 @@ fun EditProfileScreen(
 
             if (selectedImageUri != null) {
                 viewModel.uploadAndSetProfileImage(selectedImageUri!!, context.contentResolver)
-                selectedImageUri = null // Optional: clear after uploading
+                selectedImageUri = null
             }
 
-            // Update display name and description separately
             val success = viewModel.updateProfile(
                 newDisplayName = displayName.takeIf { it.isNotBlank() },
                 newDescription = description.takeIf { it.isNotBlank() }
             )
 
-            if (success && imageUpdateSuccess) {
+            val colorHex = colorToHex(selectedColor)
+            val colorUpdateSuccess = viewModel.updateThemeColor(colorHex)
+
+            if (success && imageUpdateSuccess && colorUpdateSuccess) {
                 Toast.makeText(context, "Profile updated", Toast.LENGTH_SHORT).show()
                 viewModel.loadUserProfile()
                 navController.popBackStack()
@@ -98,9 +127,7 @@ fun EditProfileScreen(
 
     LaunchedEffect(Unit) {
         onSaveAvailable {
-            scope.launch {
-                saveProfileChanges()
-            }
+            saveProfileChanges()
         }
     }
 
@@ -144,10 +171,10 @@ fun EditProfileScreen(
             )
 
             Image(
-            painter = imagePainter,
-            contentDescription = "Profile Image",
-            modifier = Modifier.fillMaxSize().clip(MaterialTheme.shapes.small),
-            contentScale = ContentScale.Crop
+                painter = imagePainter,
+                contentDescription = "Profile Image",
+                modifier = Modifier.fillMaxSize().clip(MaterialTheme.shapes.small),
+                contentScale = ContentScale.Crop
             )
             IconButton(
                 onClick = { imagePickerLauncher.launch("image/*") },
@@ -186,5 +213,61 @@ fun EditProfileScreen(
                 .heightIn(min = 100.dp),
             maxLines = 5
         )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(text = "Choose Display Name Color", style = MaterialTheme.typography.titleMedium)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        var selectedColor by remember { mutableStateOf(Color.Red) }
+
+        ColorPickerSection(
+            selectedColor = selectedColor,
+            onColorSelected = { selectedColor = it }
+        )
     }
+}
+
+@Composable
+fun ColorPickerSection(selectedColor: Color, onColorSelected: (Color) -> Unit) {
+    val colorDialogState = rememberMaterialDialogState()
+
+    Text(
+        text = "Choose Display Name Color",
+        style = MaterialTheme.typography.titleMedium
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    Box(
+        modifier = Modifier
+            .size(50.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(selectedColor)
+            .border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .clickable { colorDialogState.show() }
+    )
+
+    MaterialDialog(
+        dialogState = colorDialogState,
+        buttons = {
+            positiveButton("OK")
+            negativeButton("Cancel")
+        }
+    ) {
+        colorChooser(
+            colors = listOf(
+                Color.Red, Color.Green, Color.Blue, Color.Yellow,
+                Color.Magenta, Color.Cyan, Color.Gray, Color.Black
+            ),
+            onColorSelected = { onColorSelected(it) }
+        )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
 }

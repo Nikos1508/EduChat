@@ -191,16 +191,27 @@ fun ChatScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             items(messages, key = { it.id }) { message ->
+                val senderProfile = userProfiles[message.sender]
+                val senderName = senderProfile?.displayName ?: "Unknown"
+                val timestamp = message.created_at
+                val profileImage = senderProfile?.profileImageUrl
+                val nameColor = senderProfile?.displayNameColor
+
                 if (message.sender == currentUserId) {
                     MessageItemRight(
                         message = message,
-                        senderProfileImageUrl = userProfiles[message.sender]?.profileImageUrl,
+                        senderName = senderName,
+                        timestamp = timestamp,
+                        senderProfileImageUrl = profileImage,
                         modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                     )
                 } else {
                     MessageItemLeft(
                         message = message,
-                        senderProfileImageUrl = userProfiles[message.sender]?.profileImageUrl,
+                        senderName = senderName,
+                        timestamp = timestamp,
+                        senderProfileImageUrl = profileImage,
+                        nameColorHex = nameColor, // ← Pass it here
                         modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null)
                     )
                 }

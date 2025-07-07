@@ -13,5 +13,8 @@ data class UserProfile(
     val description: String? = null,
 
     @SerialName("profile_image_url")
-    val profileImageUrl: String? = null
+    val profileImageUrl: String? = null,
+
+    @SerialName("display_name_color")
+    val displayNameColor: String? = null
 )

@@ -2,6 +2,7 @@ package com.example.educhat.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,10 +21,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import coil.compose.rememberAsyncImagePainter
 import com.example.educhat.R
 import com.example.educhat.data.model.Message
@@ -33,14 +35,23 @@ import com.example.educhat.ui.theme.EduChatTheme
 fun MessageItemLeft(
     message: Message,
     senderProfileImageUrl: String?,
+    senderName: String = "Οδυσσέας",
+    timestamp: String = "10:18",
+    nameColorHex: String? = null,
     modifier: Modifier = Modifier
 ) {
     val imagePainter = rememberAsyncImagePainter(
         model = senderProfileImageUrl.takeIf { !it.isNullOrBlank() } ?: R.drawable.profile_image
     )
 
+    val nameColor = try {
+        nameColorHex?.let { Color(it.toColorInt()) }
+    } catch (e: Exception) {
+        null
+    } ?: MaterialTheme.colorScheme.primary
+
     Row(
-        verticalAlignment = Alignment.Bottom,
+        verticalAlignment = Alignment.Top,
         modifier = modifier
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .fillMaxWidth()
@@ -57,26 +68,45 @@ fun MessageItemLeft(
 
         Spacer(modifier = Modifier.width(6.dp))
 
-        Card(
-            shape = RoundedCornerShape(
-                topStart = 0.dp,
-                topEnd = 16.dp,
-                bottomEnd = 16.dp,
-                bottomStart = 16.dp
-            ),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
-            modifier = Modifier
-                .wrapContentWidth()
-                .widthIn(max = 300.dp)
-        ) {
+        Column {
             Text(
-                text = message.content,
-                modifier = Modifier.padding(10.dp),
-                textAlign = TextAlign.Start,
-                color = MaterialTheme.colorScheme.onSurface
+                text = senderName,
+                color = nameColor, // ← Use dynamic color
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
             )
+
+            Card(
+                shape = RoundedCornerShape(
+                    topStart = 0.dp,
+                    topEnd = 16.dp,
+                    bottomEnd = 16.dp,
+                    bottomStart = 16.dp
+                ),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.onBackground
+                ),
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .widthIn(max = 300.dp)
+            ) {
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text(
+                        text = message.content,
+                        color = MaterialTheme.colorScheme.surface,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Text(
+                        text = timestamp,
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .padding(top = 4.dp)
+                    )
+                }
+            }
         }
     }
 }

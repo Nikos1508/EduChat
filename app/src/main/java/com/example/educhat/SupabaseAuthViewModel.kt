@@ -134,20 +134,59 @@ class SupabaseAuthViewModel : ViewModel() {
         }
     }
 
+    suspend fun updateThemeColor(newColor: String): Boolean {
+        val user = client.auth.currentUserOrNull() ?: return false
+        val token = client.auth.currentSessionOrNull()?.accessToken ?: return false
+
+        val body = buildJsonObject {
+            put("theme_color", newColor)
+        }
+
+        val url = "${BuildConfig.supabaseUrl}/rest/v1/profiles?id=eq.${user.id}"
+
+        return try {
+            val response: HttpResponse = httpClient.patch(url) {
+                header("apikey", BuildConfig.supabaseKey)
+                header("Authorization", "Bearer $token")
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+            response.status.isSuccess()
+        } catch (e: Exception) {
+            Log.e("updateThemeColor", "Failed to update color", e)
+            false
+        }
+    }
+
+    private fun generateRandomColor(): String {
+        val colors = listOf(
+            "#FF5733", "#33FF57", "#3357FF",
+            "#FF33A1", "#FF8F33", "#33FFF2",
+            "#A633FF", "#FF3333", "#33FFBD",
+            "#FFD433", "#33A1FF", "#8FFF33",
+            "#FF3380", "#33FFD4", "#7A33FF",
+            "#FF7A33", "#33FF7A", "#FF3357",
+            "#5733FF", "#33FFDA", "#FFDA33"
+        )
+        return colors.random()
+    }
+
     suspend fun createProfile(displayName: String): Boolean = withContext(Dispatchers.IO) {
         val user = client.auth.currentUserOrNull() ?: return@withContext false
         val userId = user.id
+        val color = generateRandomColor()
 
         val profileData = mapOf(
             "id" to userId,
             "display_name" to displayName,
             "description" to null,
-            "profile_image_url" to null
+            "profile_image_url" to null,
+            "display_name_color" to color
         )
 
         try {
             client.postgrest["profiles"].insert(profileData)
-            Log.d("createProfile", "Profile created successfully")
+            Log.d("createProfile", "Profile created successfully with color $color")
             true
         } catch (e: Exception) {
             Log.e("createProfile", "Exception while creating profile", e)
