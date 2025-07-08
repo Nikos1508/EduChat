@@ -56,7 +56,7 @@
     <string name="add_channel">Προσθήκη Καναλιού</string>
     <string name="channel_name">Όνομα Καναλιού</string>
     <string name="add">Προσθήκη</string>
-    <string name="logged_in_successfully">Επιτυχής σύνδεση!</string>
+    <string name="logged_in_successfully">Logged in successfully!</string>
     <string name="login_failed_with_message">Η σύνδεση απέτυχε: %1$s</string>
     <string name="user_icon">Εικονίδιο χρήστη</string>
     <string name="email">Email</string>
