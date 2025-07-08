@@ -65,11 +65,14 @@ fun LoginScreen(
         else -> ""
     }
     LaunchedEffect(userStateValue, loginAttemptMade) {
+        println("LaunchedEffect triggered. loginAttemptMade = $loginAttemptMade, userState = $userStateValue")
+
         if (loginAttemptMade) {
             when (userStateValue) {
                 is UserState.Success -> {
                     if (userStateValue.message == loginSuccessMsg) {
                         Toast.makeText(context, loginSuccessMsg, Toast.LENGTH_SHORT).show()
+                        loginAttemptMade = false
                         onLoginSuccess()
                     }
                 }

@@ -331,6 +331,7 @@ class SupabaseAuthViewModel : ViewModel() {
                     email = userEmail
                     password = userPassword
                 }
+
                 val profileCreated = ensureUserProfileExists()
 
                 saveTokens(context)
@@ -342,10 +343,11 @@ class SupabaseAuthViewModel : ViewModel() {
                 } else {
                     _userState.value = UserState.Error("Failed to create user profile.")
                 }
+
             } catch (e: Exception) {
                 val errorMessage = when (e) {
                     is RestException -> e.error ?: "Login failed. Invalid credentials or server error."
-                    is HttpRequestException -> "Network error during login. Please check connection."
+                    is HttpRequestException -> "Network error during login. Please check your connection."
                     else -> e.message ?: "Unknown login error."
                 }
                 _userState.value = UserState.Error(errorMessage)
