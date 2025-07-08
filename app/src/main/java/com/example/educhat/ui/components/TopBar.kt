@@ -8,6 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -83,6 +85,24 @@ fun TopBar(
             } else {
                 when (currentScreen) {
                     AppScreen.Home, AppScreen.Calendar, AppScreen.Program, AppScreen.Chat, AppScreen.Profile -> {
+
+                        if (currentScreen == AppScreen.Program) {
+                            IconButton(onClick = { onNavigate(AppScreen.ProgramEdit) }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Edit,
+                                    contentDescription = stringResource(R.string.edit_program)
+                                )
+                            }
+                        }
+
+                        if (currentScreen == AppScreen.Calendar) {
+                            IconButton(onClick = { onNavigate(AppScreen.CalendarEdit) }) {
+                                Icon(
+                                    imageVector = Icons.Filled.EditCalendar,
+                                    contentDescription = stringResource(R.string.edit_calendar)
+                                )
+                            }
+                        }
 
                         if (currentScreen in listOf(AppScreen.Home, AppScreen.Profile, AppScreen.Program, AppScreen.Chat)) {
                             IconButton(onClick = { onNavigate(AppScreen.Calendar) }) {
